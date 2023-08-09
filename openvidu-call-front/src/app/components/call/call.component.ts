@@ -51,7 +51,7 @@ export class CallComponent implements OnInit {
 	) {}
 
 	async ngOnInit() {
-		this.subscribeToPanelToggling();
+
 		this.route.params.subscribe((params: Params) => {
 			this.sessionId = params.roomName;
 		});
@@ -69,6 +69,8 @@ export class CallComponent implements OnInit {
 		} finally {
 			this.loading = false;
 		}
+
+		this.subscribeToPanelToggling();
 	}
 
 	async onNodeCrashed() {
@@ -196,13 +198,13 @@ export class CallComponent implements OnInit {
 	}
 
 	onPollResponse(event: SignalEvent) {
-		if(this.session.connection.role == 'MODERATOR') {
+		if(this.poll && this.session.connection.role == 'MODERATOR') {
 			const data: number = parseInt(event.data);
 			console.info("Poll Response: "+data);
 			this.poll.totalResponses++;
 			this.poll.responses[data].result++;
 			console.info({role: this.session.connection.role, remoteConnections: this.session.remoteConnections, poll: this.poll});
-			if(this.session.remoteConnections.size == this.poll.totalResponses) {
+			if(this.pollSync && this.session.remoteConnections.size == this.poll.totalResponses) {
 				console.info("Trying to close poll...");
 				this.pollService.closePoll(this.session.sessionId).subscribe({
 					next: poll => this.poll = poll,

@@ -33,19 +33,6 @@ export class PollPanelComponent implements OnInit {
   session!: Session;
 
   @Input("poll")
-  /* set poll(poll: Poll) {
-    this._poll = poll;
-    this.responseIndex = -1;
-    for(let [index, response] of Object.entries(poll.responses)) {
-      if(this.session.connection.connectionId in response.participants) {
-        this.responseIndex = parseInt(index);
-        break;
-      }
-    }
-    if(this.responseIndex != -1 && this.session.connection.connectionId in poll.participants)
-      this._poll.status = 'responded';
-  }
-  get poll(): Poll { return this._poll }; */
   poll?: Poll;
 
   @Input("poll-sync")
