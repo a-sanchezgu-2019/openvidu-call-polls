@@ -53,7 +53,6 @@ public class PollController {
 
         if(!sessionId.isEmpty() && isValidToken) { // Is the moderator of the session
             openviduService.updatePoll(poll);
-            logPoll("Creation", poll);
             return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().path("/{sessionId}").buildAndExpand(poll.getSessionId()).toUri()).body(poll);
         } else {
             System.err.println("Permissions denied to create a poll");
@@ -73,7 +72,6 @@ public class PollController {
         Poll poll = openviduService.getPoll(sessionId);
         if(poll == null)
             return ResponseEntity.notFound().build();
-        logPoll("Get", poll);
         return ResponseEntity.ok(poll);
     }
 
@@ -112,7 +110,6 @@ public class PollController {
 
                 poll.setStatus(status);
                 openviduService.updatePoll(poll);
-                logPoll("Response", poll);
                 return ResponseEntity.ok(poll);
 
             } else {
@@ -148,7 +145,6 @@ public class PollController {
             Poll poll = openviduService.deletePoll(sessionId);
             if(poll == null)
                 return ResponseEntity.notFound().build();
-            logPoll("Deletion", poll);
             return ResponseEntity.ok(poll);
         }
 
