@@ -1,0 +1,21 @@
+.error {
+	height: 100%;
+    width: 100%;
+    text-align: center;
+	margin-top: 20px;
+	mat-icon {
+		vertical-align: bottom;
+	}
+}
+
+#additional-panels {
+	margin: 20px;
+	background-color: var(--ov-panel-background);
+	border-radius: var(--ov-panel-radius);
+	max-height: calc(100% - 40px);
+	min-height: calc(100% - 40px);
+}
+
+#poll-panel {
+	min-height: 100%;
+}

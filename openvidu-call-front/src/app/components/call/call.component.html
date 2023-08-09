@@ -1,0 +1,45 @@
+<ov-videoconference
+	*ngIf="!loading && !serverError"
+	[tokens]="tokens"
+	[recordingActivityRecordingsList]="recordingList"
+	[recordingActivityRecordingError]="recordingError"
+	[broadcastingActivityBroadcastingError]="broadcastingError"
+	[activitiesPanelRecordingActivity]="recordingEnabled"
+	[toolbarRecordingButton]="recordingEnabled"
+	[activitiesPanelBroadcastingActivity]="broadcastingEnabled"
+	[toolbarBroadcastingButton]="broadcastingEnabled"
+	(onToolbarLeaveButtonClicked)="onLeaveButtonClicked()"
+	(onToolbarStartRecordingClicked)="onStartRecordingClicked()"
+	(onActivitiesPanelStartRecordingClicked)="onStartRecordingClicked()"
+	(onToolbarStopRecordingClicked)="onStopRecordingClicked()"
+	(onActivitiesPanelStopRecordingClicked)="onStopRecordingClicked()"
+	(onActivitiesPanelDeleteRecordingClicked)="onDeleteRecordingClicked($event)"
+	(onActivitiesPanelForceRecordingUpdate)="onForceRecordingUpdate()"
+	(onActivitiesPanelStartBroadcastingClicked)="onStartBroadcastingClicked($event)"
+	(onActivitiesPanelStopBroadcastingClicked)="onStopBroadcastingClicked()"
+	(onToolbarStopBroadcastingClicked)="onStopBroadcastingClicked()"
+	(onNodeCrashed)="onNodeCrashed()"
+	(onSessionCreated)="onSessionCreated($event)"
+	(onParticipantCreated)="onParticipantCreated($event)"
+>
+
+	<!-- Poll Panel Button -->
+	<div *ovToolbarAdditionalPanelButtons style="text-align: center;">
+		<button id="poll-panel-btn" (click)="togglePollPanel()" mat-icon-button [class.active-btn]="showPollPanel">
+			<mat-icon>poll</mat-icon>
+		</button>
+	</div>
+
+	<!-- Poll Panel-->
+	<div *ovAdditionalPanels id="additional-panels">
+		<poll-panel [session]="this.session" [(poll)]="this.poll" [poll-sync]="this.pollSync" #pollPanel></poll-panel>
+	</div>
+
+</ov-videoconference>
+
+<div *ngIf="!loading && serverError" class="error">
+	<mat-icon>error</mat-icon>
+	<span>
+		{{ serverError }}
+	</span>
+</div>

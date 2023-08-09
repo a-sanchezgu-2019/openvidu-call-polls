@@ -1,0 +1,9 @@
+# Angular cache
+.angular/
+
+# VScode Files
+.vscode/
+
+# Libraries
+node_modules/
+

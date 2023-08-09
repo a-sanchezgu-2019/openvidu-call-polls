@@ -1,0 +1,148 @@
+#poll-panel {
+	max-height: 100%;
+	min-height: 100%;
+}
+
+.container {
+	padding: 1rem;
+	border-radius: 10px;
+}
+
+.question {
+	background-color: #BBB;
+	font-size: 14pt;
+	width: calc(100% - 2rem);
+	margin-bottom: 2rem;
+}
+
+.response {
+	width: 100%;
+	min-height: 3rem;
+	background-color: #DDD;
+	border-radius: 10px;
+	position: relative;
+	margin-bottom: 1rem;
+}
+
+.response.participant-response {
+	background-color: #BBB;
+}
+.response.participant-response.pending {
+	cursor: pointer;
+}
+.response.participant-response.pending:hover {
+	background-color: #DDD;
+}
+.response.participant-response.pending:active {
+	background-color: #88F;
+}
+
+.response.participant-response.responded {
+	background-color: #AAF;
+}
+
+.response-data.participant {
+	justify-content: start;
+}
+
+.response-progress {
+	height: 100%;
+	background-color: #AAF;
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.response-data {
+	font-size: 12pt;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 2;
+	padding-left: .5rem;
+}
+
+.response-text {
+	margin-left: .5rem;
+}
+
+.response-percentage {
+	margin-right: 1rem;
+}
+
+.total-responses {
+	font-size: 14pt;
+
+}
+
+.poll_action_btn {
+	background-color: #EEE;
+	padding: 15px;
+	font-size: 14pt;
+	width: 60%;
+	margin-top: 2rem;
+	margin-left: 20%;
+}
+
+.no-poll-text {
+	font-size: 13pt;
+}
+
+#question-input {
+	width: calc(100% - 1.2rem);
+	font-size: 14pt;
+	padding: .6rem;
+	position: relative;
+	margin-bottom: 1rem;
+}
+
+.response-input-container {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: .5rem;
+	position: relative;
+}
+
+.response-input {
+	font-size: 12pt;
+	position: relative;
+	padding: .6rem;
+	width: 75%;
+}
+
+.response-input-delete {
+	background-color: #F44;
+	color: white;
+	width: 15%;
+	min-width: 15% !important;
+	height: 100%;
+	font-size: 8pt;
+	padding: .1rem;
+	position: relative;
+}
+
+#add-response-btn {
+	background-color: #44F;
+	color: white;
+	width: 100%;
+	padding: .5rem;
+	margin-top: 1rem;
+}
+
+#creation-error {
+	width: calc(100% - 2rem);
+	margin-top: 1rem;
+}
+
+.error {
+	background-color: #FAA;
+}
