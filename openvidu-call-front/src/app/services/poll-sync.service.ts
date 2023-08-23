@@ -36,8 +36,8 @@ export class PollSyncService {
     ) as Observable<Poll>;
   }
 
-  respondPoll(sessionId: string, connectionId: string, responseIndex: number): Observable<Poll> {
-    return this.http.post(this.baseHref + "/" + sessionId, null, {params: {connectionId, responseIndex}}).pipe(
+  respondPoll(sessionId: string, nickname: string, responseIndex: number): Observable<Poll> {
+    return this.http.post(this.baseHref + "/" + sessionId, null, {params: {nickname, responseIndex}}).pipe(
       map(response => response as string),
       catchError(error => this.handleError(error))
     ) as Observable<Poll>;

@@ -49,7 +49,7 @@
         <!-- <div *ngFor="let answer of this.poll.answers" class="container response mod_response">{{answer}}</div> -->
         <div class="response" *ngFor="let response of this.poll.responses">
           <div class="response-progress" [style.width.%]="100*response.result/this.poll.totalResponses" [style]="response.result/this.poll.totalResponses >= .95? 'border-top-right-radius: 10px; border-bottom-right-radius: 10px;': ''"></div>
-          <div class="response-data"><div class="response-text">{{response.text}}</div><div class="response-percentage">{{this.poll.totalResponses == 0? 0: 100*response.result/this.poll.totalResponses}}% ({{response.result}})</div></div>
+          <div class="response-data"><div class="response-text">{{response.text}}</div><div class="response-percentage">{{this.poll.totalResponses == 0? 0: 100*response.result/this.poll.totalResponses | number : '1.0-2'}}% ({{response.result}})</div></div>
         </div>
 
         <div class="total-responses">{{this.poll.totalResponses}} of {{this.session.remoteConnections.size}} participants responded</div>

@@ -1,6 +1,7 @@
 import { Session } from 'openvidu-browser';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { PollSyncService } from 'src/app/services/poll-sync.service';
+import { ParticipantService } from 'openvidu-angular';
 
 export interface PollResponse {
   text: string;
@@ -33,7 +34,27 @@ export class PollPanelComponent implements OnInit {
   session!: Session;
 
   @Input("poll")
-  poll?: Poll;
+  get poll(): Poll {
+    return this._poll;
+  }
+  set poll(poll: Poll) {
+    if(this.session.connection.role != 'MODERATOR') {
+      let nickname = this.participantService.getLocalParticipant().getNickname();
+      if(poll.participants.includes(nickname)) {
+        for(let index = 0; index < poll.responses.length; index++) {
+          if(poll.responses[index].participants.includes(nickname)) {
+            this.responseIndex = index;
+            if(poll.status == 'pending')
+              poll.status = 'responded';
+            break;
+          }
+        }
+      }
+    }
+    this._poll = poll;
+  }
+
+  private _poll?: Poll;
 
   @Input("poll-sync")
   private pollSync: boolean = false;
@@ -42,7 +63,7 @@ export class PollPanelComponent implements OnInit {
   creationError: string = "";
   creationErrorInput: string = "";
 
-  constructor(private pollService: PollSyncService) { }
+  constructor(private pollService: PollSyncService, private participantService: ParticipantService) { }
 
   ngOnInit(): void {
     if(this.pollSync)
@@ -78,15 +99,15 @@ export class PollPanelComponent implements OnInit {
     if(this.poll.status == "pending") {
       this.responseIndex = responseIndex;
       if(this.pollSync) {
-        this.pollService.respondPoll(this.poll.sessionId, this.session.connection.connectionId, responseIndex).subscribe({
+        this.pollService.respondPoll(this.poll.sessionId, this.participantService.getLocalParticipant().getNickname(), responseIndex).subscribe({
           next: poll => {
             this.session.signal({
               data: this.responseIndex.toString(),
               to: undefined,
               type: "pollResponse"
             });
-            this.poll = poll;
-            this.poll.status = "responded";
+            this._poll = poll;
+            this._poll.status = "responded";
           },
           error: error => alert("Ha ocurrido un error inesperado: " + error)
         });
@@ -96,7 +117,7 @@ export class PollPanelComponent implements OnInit {
           to: undefined,
           type: "pollResponse"
         });
-        this.poll.status = "responded";
+        this._poll.status = "responded";
       }
     }
   }
@@ -112,7 +133,7 @@ export class PollPanelComponent implements OnInit {
         error: error => alert("Ha ocurrido un error inesperado: " + error)
       });
     } else {
-      this.poll.status = "closed";
+      this._poll.status = "closed";
       this.session.signal({
         data: JSON.stringify(this.poll),
         to: undefined,
@@ -143,7 +164,7 @@ export class PollPanelComponent implements OnInit {
   // Creation Functions
 
   loadPollForCreation() {
-    this.poll = {
+    this._poll = {
       sessionId: this.session.sessionId,
       status: "creating",
       anonimous: true,
@@ -155,13 +176,13 @@ export class PollPanelComponent implements OnInit {
   }
 
   addEmptyResponse() {
-    this.poll.responses.push({text: "", result: 0, participants: []});
+    this._poll.responses.push({text: "", result: 0, participants: []});
     this.creationError = "";
     this.creationErrorInput = "";
   }
 
   removeResponse(responseIndex: number) {
-    this.poll.responses.splice(responseIndex, 1);
+    this._poll.responses.splice(responseIndex, 1);
     this.creationError = "";
     this.creationErrorInput = "";
   }

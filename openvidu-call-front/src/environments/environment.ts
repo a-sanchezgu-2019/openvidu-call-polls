@@ -6,7 +6,7 @@ export const environment = {
   production: false,
   openvidu_url: '',
   openvidu_secret: '',
-  poll_sync: false
+  poll_sync: true
 };
 
 /*

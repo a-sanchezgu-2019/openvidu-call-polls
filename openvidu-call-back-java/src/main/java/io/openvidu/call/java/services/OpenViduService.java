@@ -318,19 +318,19 @@ public class OpenViduService {
 	/**
 	 * Updates the poll information in order to registry the poll response.
 	 * @param sessionId session ID from the poll
-	 * @param connectionId connection ID which identifies the user
+	 * @param nickname nickname which identifies the user
 	 * @param responseIndex index of the response
 	 * @return Updated poll
 	 */
-	public Poll respondPoll(String sessionId, String connectionId, int responseIndex) {
+	public Poll respondPoll(String sessionId, String nickname, int responseIndex) {
 		Poll poll = polls.get(sessionId);
 		if(poll == null)
 			return null;
 		try {
 			poll.getResponses().get(responseIndex).setResult(poll.getResponses().get(responseIndex).getResult() + 1);
-			poll.getResponses().get(responseIndex).appendParticipant(connectionId);
+			poll.getResponses().get(responseIndex).appendParticipant(nickname);
 			poll.setTotalResponses(poll.getTotalResponses() + 1);
-			poll.appendParticipant(connectionId);
+			poll.appendParticipant(nickname);
 		} catch (IndexOutOfBoundsException exception) {
 			return null;
 		}

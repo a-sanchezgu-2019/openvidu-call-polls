@@ -77,10 +77,10 @@ public class PollController {
 
     /**
      * Updates the poll information. It's used by the users in order to respond the poll or by the moderators in order to close the poll
-     * You must provide a combination of <code>sessionID</code>, <code>status</code> and <code>moderatorToken)</code> (close a poll) or <code>sessionID</code>, <code>connectionID</code> and <code>responseIndex</code> (respond a poll).
+     * You must provide a combination of <code>sessionID</code>, <code>status</code> and <code>moderatorToken)</code> (close a poll) or <code>sessionID</code>, <code>nickname</code> and <code>responseIndex</code> (respond a poll).
      * @param sessionId session ID of the call
      * @param status status of the poll ('closed' or null)
-     * @param connectionId connection ID of the user
+     * @param nickname nickname of the user
      * @param responseIndex index of the response
      * @param moderatorToken OpenVidu moderator token cookie
      * @return Response entity with the poll information
@@ -89,13 +89,13 @@ public class PollController {
     public ResponseEntity<?> updatePoll(
         @PathVariable String sessionId,
         @RequestParam(required = false) String status,
-        @RequestParam(required = false) String connectionId,
+        @RequestParam(required = false) String nickname,
         @RequestParam(required = false) Integer responseIndex,
         @CookieValue(name = OpenViduService.MODERATOR_TOKEN_NAME, defaultValue = "") String moderatorToken
     ) {
 
-        if(status == null && (connectionId == null || responseIndex == null))
-            return ResponseEntity.badRequest().body("{ error: \"Needed one of these set of params: { status: string } || { connectionId: string, responseIndex: number}\"}");
+        if(status == null && (nickname == null || responseIndex == null))
+            return ResponseEntity.badRequest().body("{ error: \"Needed one of these set of params: { status: string } || { nickname: string, responseIndex: number}\"}");
 
         if(status != null) {
 
@@ -121,7 +121,7 @@ public class PollController {
             
         } else {
 
-            Poll poll = openviduService.respondPoll(sessionId, connectionId, responseIndex);
+            Poll poll = openviduService.respondPoll(sessionId, nickname, responseIndex);
 
             if(poll != null)
                 return ResponseEntity.ok(poll);
