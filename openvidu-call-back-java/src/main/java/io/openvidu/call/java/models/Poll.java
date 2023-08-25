@@ -67,26 +67,26 @@ public class Poll {
 
     private String sessionId;
     private String status;
-    private boolean anonimous;
+    private boolean anonymous;
     private String question;
     private List<PollResponse> responses;
     private int totalResponses;
     private List<String> participants;
 
-    public Poll(String sessionId, String status, boolean anonimous, String question, List<PollResponse> responses, int totalResponses, List<String> participants) {
+    public Poll(String sessionId, String status, boolean anonymous, String question, List<PollResponse> responses, int totalResponses, List<String> participants) {
         this.sessionId = sessionId;
         this.status = status;
-        this.anonimous = anonimous;
+        this.anonymous = anonymous;
         this.question = question;
         this.responses = responses;
         this.totalResponses = totalResponses;
         this.participants = participants;
     }
 
-    public Poll(String sessionId, String status, boolean anonimous, String question, List<PollResponse> responses, int totalResponses) {
+    public Poll(String sessionId, String status, boolean anonymous, String question, List<PollResponse> responses, int totalResponses) {
         this.sessionId = sessionId;
         this.status = status;
-        this.anonimous = anonimous;
+        this.anonymous = anonymous;
         this.question = question;
         this.responses = responses;
         this.totalResponses = totalResponses;
@@ -109,12 +109,12 @@ public class Poll {
         this.status = status;
     }
 
-    public boolean isAnonimous() {
-        return anonimous;
+    public boolean isAnonymous() {
+        return anonymous;
     }
 
-    public void setAnonimous(boolean anonimous) {
-        this.anonimous = anonimous;
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 
     public String getQuestion() {
