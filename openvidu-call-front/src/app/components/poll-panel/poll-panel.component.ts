@@ -1,25 +1,8 @@
 import { Session } from 'openvidu-browser';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Poll, PollResponse, generatePollResults } from 'src/app/models/poll.model';
 import { PollSyncService } from 'src/app/services/poll-sync.service';
 import { ParticipantService } from 'openvidu-angular';
-
-export interface PollResponse {
-  text: string;
-  result: number;
-  participants: Array<string>;
-}
-
-export interface Poll {
-
-  sessionId: string;
-  status: string;
-  anonimous: boolean;
-  question: string;
-  responses: Array<PollResponse>;
-	totalResponses: number;
-  participants: Array<string>;
-
-}
 
 @Component({
   selector: 'poll-panel',
@@ -52,6 +35,8 @@ export class PollPanelComponent implements OnInit {
       }
     }
     this._poll = poll;
+    this.exportResultsFilename = null;
+    this.exportResultsHref = null;
   }
 
   private _poll?: Poll;
@@ -62,6 +47,9 @@ export class PollPanelComponent implements OnInit {
   responseIndex: number = -1;
   creationError: string = "";
   creationErrorInput: string = "";
+
+  exportResultsFilename: string = null;
+  exportResultsHref: string = null;
 
   constructor(private pollService: PollSyncService, private participantService: ParticipantService) { }
 
@@ -145,11 +133,15 @@ export class PollPanelComponent implements OnInit {
   deletePoll() {
     if(this.pollSync) {
       this.pollService.deletePoll(this.session.sessionId).subscribe({
-        complete: () => this.session.signal({
-          data: undefined,
-          to: undefined,
-          type: "pollDeleted"
-        }),
+        complete: () => {
+          this.session.signal({
+            data: undefined,
+            to: undefined,
+            type: "pollDeleted"
+          });
+          this.exportResultsFilename = null;
+          this.exportResultsHref = null;
+        },
         error: error => alert("Ha ocurrido un error inesperado: " + error)
       });
     } else {
@@ -158,7 +150,32 @@ export class PollPanelComponent implements OnInit {
         to: undefined,
         type: "pollDeleted"
       });
+      this.exportResultsFilename = null;
+      this.exportResultsHref = null;
     }
+  }
+
+  loadExportCurrentResults() {
+    if(this.pollSync) {
+      this.pollService.getPoll(this.session.sessionId).subscribe({
+        next: poll => {
+          this.poll = poll;
+          this.loadExportResults(this.poll);
+        }
+      });
+    } else {
+      this.loadExportResults(this.poll);
+    }
+  }
+
+  private loadExportResults(poll: Poll) {
+    if(poll.status != "closed") {
+      alert("Poll results cannot be exported until the poll is closed");
+      return;
+    }
+    // const blob = new Blob([], {type: "application/json"});
+    this.exportResultsFilename = this.session.sessionId+".poll.json";
+    this.exportResultsHref = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(generatePollResults(poll), null, 2));
   }
 
   // Creation Functions
@@ -167,12 +184,13 @@ export class PollPanelComponent implements OnInit {
     this._poll = {
       sessionId: this.session.sessionId,
       status: "creating",
-      anonimous: true,
+      anonymous: true,
       question: "",
       responses: [{text: "", result: 0, participants: []}, {text: "", result: 0, participants: []}],
       totalResponses: 0,
       participants: []
     };
+    console.info("Created empty poll: "+JSON.stringify(this._poll));
   }
 
   addEmptyResponse() {
@@ -191,7 +209,7 @@ export class PollPanelComponent implements OnInit {
     return {
       sessionId: this.session.sessionId,
       status: "pending",
-      anonimous: true,
+      anonymous: true,
       question: "Encuesta de prueba",
       responses: [{text: "Respuesta 0", result: 0, participants: []}, {text: "Respuesta 1", result: 0, participants: []}],
       totalResponses: 0,

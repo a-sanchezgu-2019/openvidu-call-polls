@@ -15,8 +15,8 @@ import {
 	TokenModel
 } from 'openvidu-angular';
 
-import { RestService } from '../../services/rest.service';
-import { Poll, PollPanelComponent } from '../poll-panel/poll-panel.component';
+import { RestService } from 'src/app/services/rest.service';
+import { Poll } from 'src/app/models/poll.model';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -166,7 +166,7 @@ export class CallComponent implements OnInit {
 		this.session = session;
 		if(this.pollSync) {
 			// Retrieve poll from backend
-			this.pollService.getPoll(this.sessionId, false).subscribe({
+			this.pollService.getPoll(this.sessionId, true).subscribe({
 				next: poll => this.poll = poll
 			});
 		}

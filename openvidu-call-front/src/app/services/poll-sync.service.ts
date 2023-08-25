@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Poll } from '../components/poll-panel/poll-panel.component';
+import { Poll } from 'src/app/models/poll.model';
 import { Observable, catchError, map, throwError } from 'rxjs';
 
 // const BASE_HREF: string = "http://localhost:5000/polls";

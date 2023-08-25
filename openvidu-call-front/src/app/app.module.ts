@@ -8,6 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 // Material
 import { CdkAccordionModule } from '@angular/cdk/accordion';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -40,6 +41,7 @@ const config: OpenViduAngularConfig = {
 		ReactiveFormsModule,
 		MatToolbarModule,
 		MatButtonModule,
+		MatSlideToggleModule,
 		MatIconModule,
 		MatExpansionModule,
 		MatTooltipModule,

@@ -31,11 +31,13 @@
       <div *ngIf="this.poll.status == 'creating' else mod_poll_info">
         <form (submit)="createPoll(this.poll)">
           <input id="question-input" [class.error]="this.creationErrorInput == 'question'" placeholder="Question" [(ngModel)]="this.poll.question" required #name="ngModel"/>
-          <div *ngFor="let response of this.poll.responses; let resIndex = index; " class="response-input-container">
+          <div *ngFor="let response of this._poll.responses; let resIndex = index; " class="response-input-container">
             <input class="response-input" [class.error]="this.creationErrorInput == 'response'+resIndex" [(ngModel)]="response.text" [placeholder]="'Response ' + (resIndex + 1)" required/>
             <button class="response-input-delete"  title="Remove Response" [color]="this.poll.responses.length < 3? 'disabled': ''" [disabled]="this.poll.responses.length < 3" (click)="this.removeResponse(resIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
           </div>
           <button id="add-response-btn" type="button" title="Add Response" (click)="addEmptyResponse()" mat-raised-button><mat-icon>add</mat-icon></button>
+          <mat-slide-toggle [(ngModel)]="this.poll.anonymous" id="anonymous-check">Anomimous</mat-slide-toggle>
+          <!-- <div>{{this.poll.anonymous? "True": "False"}}</div> -->
           <div *ngIf="this.creationError != ''" class="container error" id="creation-error">{{this.creationError}}</div>
           <button class="poll_action_btn" type="submit" title="Create Poll" mat-raised-button>CREATE POLL</button>
         </form>
@@ -57,6 +59,12 @@
         <!-- <input [(ngModel)]="this.poll.responses[0].result" type="number" min="0" max="1000" step="1" /> -->
         <button *ngIf="this.poll.status == 'pending'" (click)="closePoll()" class="poll_action_btn" mat-raised-button>CLOSE POLL</button>
         <button *ngIf="this.poll.status == 'closed'" (click)="deletePoll()" class="poll_action_btn" mat-raised-button>DELETE POLL</button>
+        <div *ngIf="this.poll.status == 'closed'">
+          <button *ngIf="this.exportResultsFilename == null || this.exportResultsHref == null else prepared_export" (click)="loadExportCurrentResults()" class="poll_action_btn" mat-raised-button>PREPARE RESULTS</button>
+          <ng-template #prepared_export>
+            <a [href]="this.exportResultsHref" [download]="exportResultsFilename" type="button" class="poll_action_btn" mat-raised-button>EXPORT RESULTS</a>
+          </ng-template>
+        </div>
 
       </ng-template>
 
