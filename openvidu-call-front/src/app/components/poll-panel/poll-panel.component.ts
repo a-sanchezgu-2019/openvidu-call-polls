@@ -1,8 +1,9 @@
 import { Session } from 'openvidu-browser';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Poll, PollResponse, generatePollResults } from 'src/app/models/poll.model';
+import { Component, Input, OnInit } from '@angular/core';
+import { Poll, generatePollResults } from 'src/app/models/poll.model';
 import { PollSyncService } from 'src/app/services/poll-sync.service';
 import { ParticipantService } from 'openvidu-angular';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'poll-panel',
@@ -10,8 +11,6 @@ import { ParticipantService } from 'openvidu-angular';
   styleUrls: ['./poll-panel.component.scss']
 })
 export class PollPanelComponent implements OnInit {
-
-  public static max = Math.max;
 
   @Input("session")
   session!: Session;
@@ -38,15 +37,11 @@ export class PollPanelComponent implements OnInit {
     this.exportResultsFilename = null;
     this.exportResultsHref = null;
   }
-
   private _poll?: Poll;
 
-  @Input("poll-sync")
-  private pollSync: boolean = false;
+  private pollSync: boolean = environment.poll_sync;
 
   responseIndex: number = -1;
-  creationError: string = "";
-  creationErrorInput: string = "";
 
   exportResultsFilename: string = null;
   exportResultsHref: string = null;
@@ -56,31 +51,6 @@ export class PollPanelComponent implements OnInit {
   ngOnInit(): void {
     if(this.pollSync)
       this.fetchPoll();
-  }
-
-  createPoll(poll: Poll) {
-    this.validatePoll(poll);
-    if(this.creationError == "") {
-      poll.status = "pending";
-      if(this.pollSync) {
-        this.pollService.createPoll(poll).subscribe({
-          next: poll => {
-              this.session.signal({
-              data: JSON.stringify(poll),
-              to: undefined,
-              type: "pollCreated"
-            });
-          },
-          error: error => alert("Ha ocurrido un error inesperado: " + error)
-        });
-      } else {
-        this.session.signal({
-          data: JSON.stringify(poll),
-          to: undefined,
-          type: "pollCreated"
-        });
-      }
-    }
   }
 
   respondPoll(responseIndex: number) {
@@ -178,33 +148,6 @@ export class PollPanelComponent implements OnInit {
     this.exportResultsHref = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(generatePollResults(poll), null, 2));
   }
 
-  // Creation Functions
-
-  loadPollForCreation() {
-    this._poll = {
-      sessionId: this.session.sessionId,
-      status: "creating",
-      anonymous: true,
-      question: "",
-      responses: [{text: "", result: 0, participants: []}, {text: "", result: 0, participants: []}],
-      totalResponses: 0,
-      participants: []
-    };
-    console.info("Created empty poll: "+JSON.stringify(this._poll));
-  }
-
-  addEmptyResponse() {
-    this._poll.responses.push({text: "", result: 0, participants: []});
-    this.creationError = "";
-    this.creationErrorInput = "";
-  }
-
-  removeResponse(responseIndex: number) {
-    this._poll.responses.splice(responseIndex, 1);
-    this.creationError = "";
-    this.creationErrorInput = "";
-  }
-
   private testPoll(): Poll {
     return {
       sessionId: this.session.sessionId,
@@ -217,32 +160,14 @@ export class PollPanelComponent implements OnInit {
     };
   }
 
-  private validatePoll(poll: Poll) {
-    if(poll.question == "") {
-      this.creationError = "Please, enter a question";
-      this.creationErrorInput = "question";
-      return;
-    }
-    if(poll.responses.length < 2) {
-      this.creationError = "The poll needs at least 2 responses";
-      this.creationErrorInput = "";
-      return;
-    }
-    for(let [index, response] of Object.entries(poll.responses)) {
-      if(response.text == "") {
-        this.creationError = "Please, enter the response "+(parseInt(index) + 1);
-        this.creationErrorInput = "response"+index;
-        return;
-      }
-    }
-    this.creationError = "";
-    this.creationErrorInput = "";
-  }
-
   private fetchPoll() {
     this.pollService.getPoll(this.session.sessionId, true).subscribe({
       next: poll => this.poll = poll
     });
+  }
+
+  logPoll() {
+      console.log(JSON.stringify(this._poll));
   }
 
 }

@@ -1,7 +1,9 @@
 export interface PollResponse {
+
   text: string;
   result: number;
   participants: Array<string>;
+
 }
 
 export interface Poll {
@@ -30,7 +32,15 @@ export interface PollResults {
 
 }
 
-export function generatePollResults(poll: Poll) {
+export interface PollDefinition {
+
+  question: string;
+  anonymous: boolean;
+  responses: Array<{text: string}>;
+
+}
+
+export function generatePollResults(poll: Poll): PollResults {
 
   let results: PollResults = {
     anonymous: poll.anonymous,
@@ -55,5 +65,24 @@ export function generatePollResults(poll: Poll) {
   }
 
   return results;
+
+}
+
+export function generatePoll(sessionId: string, definition: PollDefinition, initialStatus: string = 'pending'): Poll {
+
+  let poll: Poll = {
+    sessionId: sessionId,
+    status: initialStatus,
+    anonymous: definition.anonymous,
+    question: definition.question,
+    responses: [],
+    totalResponses: 0,
+    participants: []
+  }
+
+  for(let response of definition.responses)
+    poll.responses.push({text: response.text, result: 0, participants: []});
+
+  return poll;
 
 }

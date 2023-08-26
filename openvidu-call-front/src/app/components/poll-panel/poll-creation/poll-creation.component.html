@@ -1,0 +1,36 @@
+<div *ngIf="this.pollDefinition else mod_no_poll_def">
+  <form (submit)="createPoll()">
+
+    <input id="question-input" [class.error]="this.creationErrorInput == 'question'" placeholder="Question" [(ngModel)]="this.pollDefinition.question" (ngModelChange)="this.resetValidation()" required/>
+    <div *ngFor="let response of this.pollDefinition.responses; let resIndex = index; " class="response-input-container">
+      <input class="response-input" [class.error]="this.creationErrorInput == 'response'+resIndex" [(ngModel)]="response.text" [placeholder]="'Response ' + (resIndex + 1)" (ngModelChange)="this.resetValidation()" required/>
+      <button class="response-input-delete" title="Remove Response" [color]="this.pollDefinition.responses.length < 3? 'disabled': ''" [disabled]="this.pollDefinition.responses.length < 3" (click)="this.removeResponse(resIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
+    </div>
+    <button id="add-response-btn" type="button" title="Add Response" (click)="addEmptyResponse()" mat-raised-button><mat-icon>add</mat-icon></button>
+
+    <mat-slide-toggle [(ngModel)]="this.pollDefinition.anonymous" (ngModelChange)="this.resetValidation()" id="anonymous-check">Anonymous</mat-slide-toggle>
+
+    <button class="poll_action_btn" type="submit" title="Create Poll" mat-raised-button #publishButton>PUBLISH POLL</button>
+
+    <div *ngIf="this.creationError != ''" class="container error" id="creation-error">{{this.creationError}}</div>
+
+    <a *ngIf="this.exportFilename != null && this.exportHref != null else not_validated" [href]="this.exportHref" [download]="this.exportFilename" type="button" class="poll_action_btn" type="button" title="Export Definition" mat-raised-button #exportButton>EXPORT DEF</a>
+    <ng-template #not_validated>
+      <div id="export-note" class="container note">You must validate your poll before exporting it.</div>
+      <button class="poll_action_btn" title="Validate Poll" type="button" (click)="validateCurrentDefinition()" mat-raised-button #validateButton>VALIDATE POLL</button>
+    </ng-template>
+
+    <button class="poll_action_btn" title="Import Poll" type="button" (click)="importInput.click();" mat-raised-button #importButton>IMPORT POLL</button>
+    <input id="import-input" (change)="importSelectedPoll($event.target.files[0])" type="file" accept=".json,application/json" multiple="false" #importInput/>
+
+    <button (click)="logCurrentDefinition()" type="button" class="poll_action_btn" mat-raised-button #logButton>LOG DEF</button>
+
+  </form>
+</div>
+
+<ng-template #mod_no_poll_def>
+  <div>
+    <p class="no-poll-text">There is no poll in process. Click the button below in order to create one.</p>
+    <button (click)="loadPollForCreation()" class="poll_action_btn" mat-raised-button #createButton>CREATE POLL</button>
+  </div>
+</ng-template>

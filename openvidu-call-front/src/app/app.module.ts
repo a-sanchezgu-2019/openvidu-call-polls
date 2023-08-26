@@ -25,6 +25,7 @@ import { OpenViduAngularConfig, OpenViduAngularModule } from 'openvidu-angular';
 import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 import { HttpRequestInterceptor } from './services/http-interceptor.service';
 import { PollPanelComponent } from './components/poll-panel/poll-panel.component';
+import { PollCreationComponent } from './components/poll-panel/poll-creation/poll-creation.component';
 
 // Services
 
@@ -33,7 +34,7 @@ const config: OpenViduAngularConfig = {
 };
 
 @NgModule({
-	declarations: [AppComponent, HomeComponent, CallComponent, AdminDashboardComponent, PollPanelComponent],
+	declarations: [AppComponent, HomeComponent, CallComponent, AdminDashboardComponent, PollPanelComponent, PollCreationComponent],
 	imports: [
 		BrowserModule,
 		BrowserAnimationsModule,

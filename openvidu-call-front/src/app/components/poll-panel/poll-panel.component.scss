@@ -94,61 +94,6 @@
 	font-size: 13pt;
 }
 
-#question-input {
-	width: calc(100% - 1.2rem);
-	font-size: 14pt;
-	padding: .6rem;
-	position: relative;
-	margin-bottom: 1rem;
-}
-
-.response-input-container {
-	width: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: .5rem;
-	position: relative;
-}
-
-.response-input {
-	font-size: 12pt;
-	position: relative;
-	padding: .6rem;
-	width: 75%;
-}
-
-.response-input-delete {
-	background-color: #F44;
-	color: white;
-	width: 15%;
-	min-width: 15% !important;
-	height: 100%;
-	font-size: 8pt;
-	padding: .1rem;
-	position: relative;
-}
-
-#add-response-btn {
-	background-color: #44F;
-	color: white;
-	width: 100%;
-	padding: .5rem;
-	margin-top: 1rem;
-}
-
-#anonymous-check {
-	font-size: 12pt;
-	font-weight: bold;
-	padding: 0 1rem;
-	margin-top: 1.5rem;
-}
-
-#creation-error {
-	width: calc(100% - 2rem);
-	margin-top: 1rem;
-}
-
 .error {
 	background-color: #FAA;
 }

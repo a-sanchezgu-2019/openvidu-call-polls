@@ -14,6 +14,8 @@
 
       <div *ngIf="this.poll.status == 'closed'" class="container">Poll has been closed</div>
 
+      <button (click)="logPoll()" class="poll_action_btn" mat-raised-button>LOG POLL</button>
+
     </div>
 
     <ng-template #no_poll>
@@ -28,53 +30,31 @@
 
     <div *ngIf="this.poll else mod_no_poll">
 
-      <div *ngIf="this.poll.status == 'creating' else mod_poll_info">
-        <form (submit)="createPoll(this.poll)">
-          <input id="question-input" [class.error]="this.creationErrorInput == 'question'" placeholder="Question" [(ngModel)]="this.poll.question" required #name="ngModel"/>
-          <div *ngFor="let response of this._poll.responses; let resIndex = index; " class="response-input-container">
-            <input class="response-input" [class.error]="this.creationErrorInput == 'response'+resIndex" [(ngModel)]="response.text" [placeholder]="'Response ' + (resIndex + 1)" required/>
-            <button class="response-input-delete"  title="Remove Response" [color]="this.poll.responses.length < 3? 'disabled': ''" [disabled]="this.poll.responses.length < 3" (click)="this.removeResponse(resIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
-          </div>
-          <button id="add-response-btn" type="button" title="Add Response" (click)="addEmptyResponse()" mat-raised-button><mat-icon>add</mat-icon></button>
-          <mat-slide-toggle [(ngModel)]="this.poll.anonymous" id="anonymous-check">Anomimous</mat-slide-toggle>
-          <!-- <div>{{this.poll.anonymous? "True": "False"}}</div> -->
-          <div *ngIf="this.creationError != ''" class="container error" id="creation-error">{{this.creationError}}</div>
-          <button class="poll_action_btn" type="submit" title="Create Poll" mat-raised-button>CREATE POLL</button>
-        </form>
+      <div class="question container">{{this.poll.question}}</div>
+      <!-- <div *ngFor="let answer of this.poll.answers" class="container response mod_response">{{answer}}</div> -->
+      <div class="response" *ngFor="let response of this.poll.responses">
+        <div class="response-progress" [style.width.%]="100*response.result/this.poll.totalResponses" [style]="response.result/this.poll.totalResponses >= .95? 'border-top-right-radius: 10px; border-bottom-right-radius: 10px;': ''"></div>
+        <div class="response-data"><div class="response-text">{{response.text}}</div><div class="response-percentage">{{this.poll.totalResponses == 0? 0: 100*response.result/this.poll.totalResponses | number : '1.0-2'}}% ({{response.result}})</div></div>
       </div>
 
-      <!-- <div>Status: {{this.poll.status}}</div> -->
+      <div class="total-responses">{{this.poll.totalResponses}} of {{this.session.remoteConnections.size}} participants responded</div>
 
-      <ng-template #mod_poll_info>
+      <!-- <input [(ngModel)]="this.poll.responses[0].result" type="number" min="0" max="1000" step="1" /> -->
+      <button *ngIf="this.poll.status == 'pending'" (click)="closePoll()" class="poll_action_btn" mat-raised-button>CLOSE POLL</button>
+      <button *ngIf="this.poll.status == 'closed'" (click)="deletePoll()" class="poll_action_btn" mat-raised-button>DELETE POLL</button>
+      <div *ngIf="this.poll.status == 'closed'">
+        <button *ngIf="this.exportResultsFilename == null || this.exportResultsHref == null else prepared_export" (click)="loadExportCurrentResults()" class="poll_action_btn" mat-raised-button>PREPARE RESULTS</button>
+        <ng-template #prepared_export>
+          <a [href]="this.exportResultsHref" [download]="exportResultsFilename" type="button" class="poll_action_btn" mat-raised-button>EXPORT RESULTS</a>
+        </ng-template>
+      </div>
 
-        <div class="question container">{{this.poll.question}}</div>
-        <!-- <div *ngFor="let answer of this.poll.answers" class="container response mod_response">{{answer}}</div> -->
-        <div class="response" *ngFor="let response of this.poll.responses">
-          <div class="response-progress" [style.width.%]="100*response.result/this.poll.totalResponses" [style]="response.result/this.poll.totalResponses >= .95? 'border-top-right-radius: 10px; border-bottom-right-radius: 10px;': ''"></div>
-          <div class="response-data"><div class="response-text">{{response.text}}</div><div class="response-percentage">{{this.poll.totalResponses == 0? 0: 100*response.result/this.poll.totalResponses | number : '1.0-2'}}% ({{response.result}})</div></div>
-        </div>
-
-        <div class="total-responses">{{this.poll.totalResponses}} of {{this.session.remoteConnections.size}} participants responded</div>
-
-        <!-- <input [(ngModel)]="this.poll.responses[0].result" type="number" min="0" max="1000" step="1" /> -->
-        <button *ngIf="this.poll.status == 'pending'" (click)="closePoll()" class="poll_action_btn" mat-raised-button>CLOSE POLL</button>
-        <button *ngIf="this.poll.status == 'closed'" (click)="deletePoll()" class="poll_action_btn" mat-raised-button>DELETE POLL</button>
-        <div *ngIf="this.poll.status == 'closed'">
-          <button *ngIf="this.exportResultsFilename == null || this.exportResultsHref == null else prepared_export" (click)="loadExportCurrentResults()" class="poll_action_btn" mat-raised-button>PREPARE RESULTS</button>
-          <ng-template #prepared_export>
-            <a [href]="this.exportResultsHref" [download]="exportResultsFilename" type="button" class="poll_action_btn" mat-raised-button>EXPORT RESULTS</a>
-          </ng-template>
-        </div>
-
-      </ng-template>
+      <button (click)="logPoll()" class="poll_action_btn" mat-raised-button>LOG POLL</button>
 
     </div>
 
     <ng-template #mod_no_poll>
-      <div>
-        <p class="no-poll-text">There is no poll in process. Click the button below in order to create one.</p>
-        <button (click)="loadPollForCreation()" class="poll_action_btn" mat-raised-button>CREATE POLL</button>
-      </div>
+      <app-poll-creation [session]="this.session"></app-poll-creation>
     </ng-template>
 
   </ng-template>
