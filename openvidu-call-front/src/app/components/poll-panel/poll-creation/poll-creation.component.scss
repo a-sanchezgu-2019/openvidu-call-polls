@@ -54,7 +54,8 @@
 }
 
 #creation-error,
-#export-note {
+#export-note,
+#export-valid {
 	width: calc(100% - 2rem);
 	margin-top: 1rem;
   font-size: 12pt;
@@ -69,12 +70,30 @@
 	margin-left: 20%;
 }
 
+.poll_action_buttons {
+	width: calc(100% - 2rem);
+	padding: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-evenly;
+}
+
+.poll_action_icon_btn {
+	background-color: #EEE;
+	padding: 15px;
+	font-size: 18pt;
+}
+
 .error {
 	background-color: #FAA;
 }
 
 .note {
   background-color: #DDF;
+}
+
+.valid {
+	background-color: #AFA;
 }
 
 #import-input {

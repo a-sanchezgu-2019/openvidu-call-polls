@@ -10,20 +10,21 @@
 
     <mat-slide-toggle [(ngModel)]="this.pollDefinition.anonymous" (ngModelChange)="this.resetValidation()" id="anonymous-check">Anonymous</mat-slide-toggle>
 
-    <button class="poll_action_btn" type="submit" title="Create Poll" mat-raised-button #publishButton>PUBLISH POLL</button>
-
     <div *ngIf="this.creationError != ''" class="container error" id="creation-error">{{this.creationError}}</div>
+    <div *ngIf="this.creationError == '' && this.creationErrorInput == '' && this.exportFilename != null && this.exportHref != null" id="export-valid" class="container valid">Validated poll.</div>
 
-    <a *ngIf="this.exportFilename != null && this.exportHref != null else not_validated" [href]="this.exportHref" [download]="this.exportFilename" type="button" class="poll_action_btn" type="button" title="Export Definition" mat-raised-button #exportButton>EXPORT DEF</a>
-    <ng-template #not_validated>
-      <div id="export-note" class="container note">You must validate your poll before exporting it.</div>
-      <button class="poll_action_btn" title="Validate Poll" type="button" (click)="validateCurrentDefinition()" mat-raised-button #validateButton>VALIDATE POLL</button>
-    </ng-template>
+    <div class="poll_action_buttons">
+      <button class="poll_action_icon_btn" type="submit" title="Create Poll" mat-raised-button><mat-icon>send</mat-icon></button>
+      <button *ngIf="this.exportFilename == null || this.exportHref == null" class="poll_action_icon_btn" type="button" title="Validate Poll" (click)="validateCurrentDefinition()" mat-raised-button><mat-icon>done</mat-icon></button>
+      <a *ngIf="this.exportFilename != null && this.exportHref != null" [href]="this.exportHref" [download]="this.exportFilename" type="button" class="poll_action_icon_btn" title="Export Definition" mat-raised-button><mat-icon>get_app</mat-icon></a>
+      <button class="poll_action_icon_btn" type="button" title="Import Poll" (click)="importInput.click();" mat-raised-button><mat-icon>publish</mat-icon></button>
+    </div>
 
-    <button class="poll_action_btn" title="Import Poll" type="button" (click)="importInput.click();" mat-raised-button #importButton>IMPORT POLL</button>
     <input id="import-input" (change)="importSelectedPoll($event.target.files[0])" type="file" accept=".json,application/json" multiple="false" #importInput/>
 
-    <button (click)="logCurrentDefinition()" type="button" class="poll_action_btn" mat-raised-button #logButton>LOG DEF</button>
+    <div *ngIf="this.exportFilename == null || this.exportHref == null" id="export-note" class="container note">You must validate your poll before exporting it.</div>
+
+    <button (click)="logCurrentDefinition()" type="button" class="poll_action_btn" mat-raised-button>LOG DEF</button>
 
   </form>
 </div>
@@ -31,6 +32,6 @@
 <ng-template #mod_no_poll_def>
   <div>
     <p class="no-poll-text">There is no poll in process. Click the button below in order to create one.</p>
-    <button (click)="loadPollForCreation()" class="poll_action_btn" mat-raised-button #createButton>CREATE POLL</button>
+    <button (click)="loadPollForCreation()" class="poll_action_btn" mat-raised-button>CREATE POLL</button>
   </div>
 </ng-template>
