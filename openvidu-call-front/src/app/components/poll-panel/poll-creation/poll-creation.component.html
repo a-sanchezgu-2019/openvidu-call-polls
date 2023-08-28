@@ -4,9 +4,9 @@
     <input id="question-input" [class.error]="this.creationErrorInput == 'question'" placeholder="Question" [(ngModel)]="this.pollDefinition.question" (ngModelChange)="this.resetValidation()" required/>
     <div *ngFor="let response of this.pollDefinition.responses; let resIndex = index; " class="response-input-container">
       <input class="response-input" [class.error]="this.creationErrorInput == 'response'+resIndex" [(ngModel)]="response.text" [placeholder]="'Response ' + (resIndex + 1)" (ngModelChange)="this.resetValidation()" required/>
-      <button class="response-input-delete" title="Remove Response" [color]="this.pollDefinition.responses.length < 3? 'disabled': ''" [disabled]="this.pollDefinition.responses.length < 3" (click)="this.removeResponse(resIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
+      <button class="response-input-delete" matTooltip="Remove Response" matTooltipPosition="above" [color]="this.pollDefinition.responses.length < 3? 'disabled': ''" [disabled]="this.pollDefinition.responses.length < 3" (click)="this.removeResponse(resIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
     </div>
-    <button id="add-response-btn" type="button" title="Add Response" (click)="addEmptyResponse()" mat-raised-button><mat-icon>add</mat-icon></button>
+    <button id="add-response-btn" type="button" matTooltip="Add Response" (click)="addEmptyResponse()" mat-raised-button><mat-icon>add</mat-icon></button>
 
     <mat-slide-toggle [(ngModel)]="this.pollDefinition.anonymous" (ngModelChange)="this.resetValidation()" id="anonymous-check">Anonymous</mat-slide-toggle>
 
@@ -14,10 +14,10 @@
     <div *ngIf="this.creationError == '' && this.creationErrorInput == '' && this.exportFilename != null && this.exportHref != null" id="export-valid" class="container valid">Validated poll.</div>
 
     <div class="poll_action_buttons">
-      <button class="poll_action_icon_btn" type="submit" title="Create Poll" mat-raised-button><mat-icon>send</mat-icon></button>
-      <button *ngIf="this.exportFilename == null || this.exportHref == null" class="poll_action_icon_btn" type="button" title="Validate Poll" (click)="validateCurrentDefinition()" mat-raised-button><mat-icon>done</mat-icon></button>
-      <a *ngIf="this.exportFilename != null && this.exportHref != null" [href]="this.exportHref" [download]="this.exportFilename" type="button" class="poll_action_icon_btn" title="Export Definition" mat-raised-button><mat-icon>get_app</mat-icon></a>
-      <button class="poll_action_icon_btn" type="button" title="Import Poll" (click)="importInput.click();" mat-raised-button><mat-icon>publish</mat-icon></button>
+      <button *ngIf="this.exportFilename == null || this.exportHref == null" class="poll_action_icon_btn" type="button" matTooltip="Validate Poll" (click)="validateCurrentDefinition()" mat-raised-button><mat-icon>done</mat-icon></button>
+      <a *ngIf="this.exportFilename != null && this.exportHref != null" [href]="this.exportHref" [download]="this.exportFilename" type="button" class="poll_action_icon_btn" matTooltip="Export Definition" mat-raised-button><mat-icon>get_app</mat-icon></a>
+      <button class="poll_action_icon_btn" type="button" matTooltip="Import Poll" (click)="importInput.click();" mat-raised-button><mat-icon>publish</mat-icon></button>
+      <button class="poll_action_icon_btn" type="submit" matTooltip="Create Poll" mat-raised-button><mat-icon>forward</mat-icon></button>
     </div>
 
     <input id="import-input" (change)="importSelectedPoll($event.target.files[0])" type="file" accept=".json,application/json" multiple="false" #importInput/>
@@ -32,6 +32,6 @@
 <ng-template #mod_no_poll_def>
   <div>
     <p class="no-poll-text">There is no poll in process. Click the button below in order to create one.</p>
-    <button (click)="loadPollForCreation()" class="poll_action_btn" mat-raised-button>CREATE POLL</button>
+    <button (click)="loadPollForCreation()" class="poll_action_btn" matTooltip="Create Poll" mat-raised-button>CREATE POLL</button>
   </div>
 </ng-template>
