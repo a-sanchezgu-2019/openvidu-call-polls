@@ -1,9 +1,17 @@
 <div *ngIf="this.pollDefinition else mod_no_poll_def">
   <form (submit)="createPoll()">
 
-    <input id="question-input" [class.error]="this.creationErrorInput == 'question'" placeholder="Question" [(ngModel)]="this.pollDefinition.question" (ngModelChange)="this.resetValidation()" required/>
+    <mat-form-field id="question-input" class="poll-form-field" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'question'" [color]="this.creationErrorInput == 'question'? 'warn': 'primary'">
+      <mat-label>Question</mat-label>
+      <input matInput type="text" [(ngModel)]="this.pollDefinition.question" (ngModelChange)="this.resetValidation()"/>
+    </mat-form-field>
+    <!-- <input id="question-input" [class.error]="this.creationErrorInput == 'question'" placeholder="Question" [(ngModel)]="this.pollDefinition.question" (ngModelChange)="this.resetValidation()" required/> -->
     <div *ngFor="let response of this.pollDefinition.responses; let resIndex = index; " class="response-input-container">
-      <input class="response-input" [class.error]="this.creationErrorInput == 'response'+resIndex" [(ngModel)]="response.text" [placeholder]="'Response ' + (resIndex + 1)" (ngModelChange)="this.resetValidation()" required/>
+      <!-- <input class="response-input" [class.error]="this.creationErrorInput == 'response'+resIndex" [(ngModel)]="response.text" [placeholder]="'Response ' + (resIndex + 1)" (ngModelChange)="this.resetValidation()" required/> -->
+      <mat-form-field class="poll-form-field response-input" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'response'+resIndex" [color]="this.creationErrorInput == 'response'+resIndex? 'warn': 'primary'">
+        <mat-label>Response {{(resIndex + 1)}}</mat-label>
+        <input matInput type="text" [(ngModel)]="response.text" (ngModelChange)="this.resetValidation()"/>
+      </mat-form-field>
       <button class="response-input-delete" matTooltip="Remove Response" matTooltipPosition="above" [color]="this.pollDefinition.responses.length < 3? 'disabled': ''" [disabled]="this.pollDefinition.responses.length < 3" (click)="this.removeResponse(resIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
     </div>
     <button id="add-response-btn" type="button" matTooltip="Add Response" (click)="addEmptyResponse()" mat-raised-button><mat-icon>add</mat-icon></button>
@@ -11,7 +19,7 @@
     <mat-slide-toggle [(ngModel)]="this.pollDefinition.anonymous" (ngModelChange)="this.resetValidation()" id="anonymous-check">Anonymous</mat-slide-toggle>
 
     <div *ngIf="this.creationError != ''" class="container error" id="creation-error">{{this.creationError}}</div>
-    <div *ngIf="this.creationError == '' && this.creationErrorInput == '' && this.exportFilename != null && this.exportHref != null" id="export-valid" class="container valid">Validated poll.</div>
+    <div *ngIf="this.creationError == '' && this.exportFilename != null && this.exportHref != null" id="export-valid" class="container valid">Validated poll.</div>
 
     <div class="poll_action_buttons">
       <button *ngIf="this.exportFilename == null || this.exportHref == null" class="poll_action_icon_btn" type="button" matTooltip="Validate Poll" (click)="validateCurrentDefinition()" mat-raised-button><mat-icon>done</mat-icon></button>

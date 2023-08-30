@@ -61,3 +61,13 @@ body { margin: 0; font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif
   --ov-video-radius: 5px;
   --ov-panel-radius: 5px;
 }
+
+// Material Form Field Custom Styles for Polls
+
+.poll-form-field .mat-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+.poll-form-field-invalid .mat-form-field-outline > * {
+	background-color: #FAA;
+}
