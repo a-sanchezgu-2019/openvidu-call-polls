@@ -46,7 +46,7 @@
         <a *ngIf="this.exportResultsFilename != null && this.exportResultsHref != null" [href]="this.exportResultsHref" [download]="exportResultsFilename" type="button" class="poll_action_icon_btn" matTooltip="Export Results" mat-raised-button><mat-icon>get_app</mat-icon></a>
       </div>
 
-      <button (click)="logPoll()" class="poll_action_btn" mat-raised-button>LOG POLL</button>
+      <button *ngIf="!this.production" (click)="logPoll()" class="poll_action_btn" mat-raised-button>LOG POLL</button>
 
     </div>
 

@@ -11,6 +11,8 @@ import { PollSyncService } from 'src/app/services/poll-sync.service';
 })
 export class PollCreationComponent {
 
+  production: boolean = environment.production;
+
   @Input("session")
   session!: Session;
 

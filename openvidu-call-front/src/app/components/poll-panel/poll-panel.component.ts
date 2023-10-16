@@ -12,6 +12,8 @@ import { environment } from 'src/environments/environment';
 })
 export class PollPanelComponent implements OnInit {
 
+  production: boolean = environment.production;
+
   @Input("session")
   session!: Session;
 

@@ -32,7 +32,7 @@
 
     <div *ngIf="this.exportFilename == null || this.exportHref == null" id="export-note" class="container note">You must validate your poll before exporting it.</div>
 
-    <button (click)="logCurrentDefinition()" type="button" class="poll_action_btn" mat-raised-button>LOG DEF</button>
+    <button *ngIf="!this.production" (click)="logCurrentDefinition()" type="button" class="poll_action_btn" mat-raised-button>LOG DEF</button>
 
   </form>
 </div>
