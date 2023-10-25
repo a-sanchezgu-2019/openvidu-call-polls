@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Poll } from 'src/app/models/poll.model';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, map, throwError, of } from 'rxjs';
 
 // const BASE_HREF: string = "http://localhost:5000/polls";
 
@@ -13,11 +13,12 @@ export class PollSyncService {
   private baseHref: string;
 
   constructor(private http: HttpClient) {
-    let cookies = new Map<string, string>();
+    /* let cookies = new Map<string, string>();
     for(let cookie of document.cookie.split(";")) {
       let [key, value] = cookie.split("=");
-      cookies.set(key.trim(), value.trim());
-    }
+      if(key && value)
+        cookies.set(key.trim(), value.trim());
+    } */
 
     this.baseHref = '/' + (!!window.location.pathname.split('/')[1] ? window.location.pathname.split('/')[1] + '/polls' : 'polls');
   }
@@ -58,11 +59,9 @@ export class PollSyncService {
   }
 
   private handleError(error: any, ignoreNotFound: boolean = false) {
-    return throwError(() => {
-      if(error.status != 404 || !ignoreNotFound)
-        return new Error('Server error (' + error.status + '): ' + error.text);
-      return null;
-    });
+    if(error.status != 404 || !ignoreNotFound)
+      return throwError(() => new Error("Server error(" + error.status + "): " + error.text));
+    return of(null);
   }
 
 }

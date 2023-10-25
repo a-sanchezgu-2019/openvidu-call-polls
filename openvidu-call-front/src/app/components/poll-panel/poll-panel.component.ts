@@ -22,9 +22,10 @@ export class PollPanelComponent implements OnInit {
     return this._poll;
   }
   set poll(poll: Poll) {
-    if(this.session.connection.role != 'MODERATOR') {
-      let nickname = this.participantService.getLocalParticipant().getNickname();
-      if(poll.participants.includes(nickname)) {
+    if(this.session.connection.role != 'MODERATOR' && poll != null) {
+      this.responseIndex = poll.responseIndex?? -1;
+      /* let nickname = this.participantService.getLocalParticipant().getNickname();
+      if(poll.participants?.includes(nickname)) {
         for(let index = 0; index < poll.responses.length; index++) {
           if(poll.responses[index].participants.includes(nickname)) {
             this.responseIndex = index;
@@ -33,7 +34,7 @@ export class PollPanelComponent implements OnInit {
             break;
           }
         }
-      }
+      } */
     }
     this._poll = poll;
     this.exportResultsFilename = null;

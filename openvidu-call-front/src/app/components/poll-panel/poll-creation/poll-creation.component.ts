@@ -47,8 +47,6 @@ export class PollCreationComponent {
 
   createPoll() {
 
-    console.debug("Call to createPoll()");
-
     this.validateCurrentDefinition();
 
     if(this.creationError == "") {
@@ -79,8 +77,6 @@ export class PollCreationComponent {
 
   validateCurrentDefinition() {
 
-    console.debug("Call to validateCurrentDefinition()");
-
     let validationResult = this.validatePollDefinition(this.pollDefinition);
 
     if(validationResult == "") {
@@ -97,8 +93,6 @@ export class PollCreationComponent {
   }
 
   importSelectedPoll(file: File) {
-
-    console.debug("Call to importSelectedPoll()");
 
     file.text().then( text => {
       try {

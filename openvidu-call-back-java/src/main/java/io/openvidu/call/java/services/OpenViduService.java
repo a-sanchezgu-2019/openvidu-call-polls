@@ -322,15 +322,15 @@ public class OpenViduService {
 	 * @param responseIndex index of the response
 	 * @return Updated poll
 	 */
-	public Poll respondPoll(String sessionId, String nickname, int responseIndex) {
+	public Poll respondPoll(String sessionId, String participantId, String nickname, int responseIndex) {
 		Poll poll = polls.get(sessionId);
 		if(poll == null)
 			return null;
 		try {
 			poll.getResponses().get(responseIndex).setResult(poll.getResponses().get(responseIndex).getResult() + 1);
-			poll.getResponses().get(responseIndex).appendParticipant(nickname);
+			poll.getResponses().get(responseIndex).appendParticipant(participantId);
 			poll.setTotalResponses(poll.getTotalResponses() + 1);
-			poll.appendParticipant(nickname);
+			poll.putParticipant(participantId, nickname);
 		} catch (IndexOutOfBoundsException exception) {
 			return null;
 		}

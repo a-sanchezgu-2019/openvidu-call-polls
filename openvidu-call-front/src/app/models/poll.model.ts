@@ -15,6 +15,7 @@ export interface Poll {
   responses: Array<PollResponse>;
 	totalResponses: number;
   participants: Array<string>;
+  responseIndex?: number;
 
 }
 

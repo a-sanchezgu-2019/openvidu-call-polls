@@ -2,6 +2,8 @@ package io.openvidu.call.java.models;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Poll {
 
@@ -71,9 +73,9 @@ public class Poll {
     private String question;
     private List<PollResponse> responses;
     private int totalResponses;
-    private List<String> participants;
+    private Map<String, String> participants;
 
-    public Poll(String sessionId, String status, boolean anonymous, String question, List<PollResponse> responses, int totalResponses, List<String> participants) {
+    public Poll(String sessionId, String status, boolean anonymous, String question, List<PollResponse> responses, int totalResponses, Map<String, String> participants) {
         this.sessionId = sessionId;
         this.status = status;
         this.anonymous = anonymous;
@@ -90,7 +92,7 @@ public class Poll {
         this.question = question;
         this.responses = responses;
         this.totalResponses = totalResponses;
-        this.participants = new ArrayList<>();
+        this.participants = new HashMap<>();
     }
 
     public String getSessionId() {
@@ -141,28 +143,24 @@ public class Poll {
         this.totalResponses = totalResponses;
     }
 
-    public List<String> getParticipants() {
+    public Map<String, String> getParticipants() {
         return participants;
     }
 
-    public void setParticipants(List<String> participants) {
+    public void setParticipants(Map<String, String> participants) {
         this.participants = participants;
     }
 
-    public void appendParticipant(String participant) {
-        this.participants.add(participant);
+    public void putParticipant(String participantId, String nickname) {
+        this.participants.put(participantId, nickname);
     }
 
-    public String getParticipant(int index) throws IndexOutOfBoundsException {
-        return this.participants.get(index);
+    public String getParticipant(String participantId) {
+        return this.participants.get(participantId);
     }
 
-    public boolean removeParticipant(String participant) {
-        return this.participants.remove(participant);
-    }
-
-    public String popParticipant(int index) throws IndexOutOfBoundsException {
-        return this.participants.remove(index);
+    public String removeParticipant(String participantId) {
+        return this.participants.remove(participantId);
     }
     
 }
