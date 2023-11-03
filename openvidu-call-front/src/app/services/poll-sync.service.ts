@@ -38,14 +38,14 @@ export class PollSyncService {
   }
 
   respondPoll(sessionId: string, nickname: string, responseIndex: number): Observable<Poll> {
-    return this.http.post(this.baseHref + "/" + sessionId, null, {params: {nickname, responseIndex}}).pipe(
-      map(response => response as string),
+    return this.http.put(this.baseHref + "/" + sessionId, null, {params: {nickname, responseIndex}}).pipe(
+      map(response => response as Poll),
       catchError(error => this.handleError(error))
     ) as Observable<Poll>;
   }
 
   closePoll(sessionId: string): Observable<Poll> {
-    return this.http.post(this.baseHref + "/" + sessionId, null, {params: {status: "closed"}}).pipe(
+    return this.http.put(this.baseHref + "/" + sessionId, null, {params: {status: "closed"}}).pipe(
       map(response => response as Poll),
       catchError(error => this.handleError(error))
     ) as Observable<Poll>;
