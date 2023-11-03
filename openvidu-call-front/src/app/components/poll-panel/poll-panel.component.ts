@@ -23,18 +23,21 @@ export class PollPanelComponent implements OnInit {
   }
   set poll(poll: Poll) {
     if(this.session.connection.role != 'MODERATOR' && poll != null) {
-      this.responseIndex = poll.responseIndex?? -1;
-      /* let nickname = this.participantService.getLocalParticipant().getNickname();
-      if(poll.participants?.includes(nickname)) {
-        for(let index = 0; index < poll.responses.length; index++) {
-          if(poll.responses[index].participants.includes(nickname)) {
-            this.responseIndex = index;
-            if(poll.status == 'pending')
-              poll.status = 'responded';
-            break;
+      if(this.pollSync) {
+        this.responseIndex = poll.responseIndex?? -1;
+      } else {
+        let nickname = this.participantService.getLocalParticipant().getNickname();
+        if(poll.participants?.includes(nickname)) {
+          for(let index = 0; index < poll.responses.length; index++) {
+            if(poll.responses[index].participants.includes(nickname)) {
+              this.responseIndex = index;
+              if(poll.status == 'pending')
+                poll.status = 'responded';
+              break;
+            }
           }
         }
-      } */
+      }
     }
     this._poll = poll;
     this.exportResultsFilename = null;
@@ -58,19 +61,19 @@ export class PollPanelComponent implements OnInit {
 
   respondPoll(responseIndex: number) {
     if(this.poll.status == "pending") {
+      let nickname = this.participantService.getLocalParticipant().getNickname();
       this.responseIndex = responseIndex;
       if(this.pollSync) {
-        this.pollService.respondPoll(this.poll.sessionId, this.participantService.getLocalParticipant().getNickname(), responseIndex).subscribe({
+        this.pollService.respondPoll(this.poll.sessionId, nickname, responseIndex).subscribe({
           next: poll => {
             this.session.signal({
-              data: this.responseIndex.toString(),
+              data: nickname,
               to: undefined,
               type: "pollResponse"
             });
             this._poll = poll;
-            this._poll.status = "responded";
           },
-          error: error => alert("Ha ocurrido un error inesperado: " + error)
+          error: error => alert("An unexpected error occured: " + error)
         });
       } else {
         this.session.signal({
@@ -87,11 +90,11 @@ export class PollPanelComponent implements OnInit {
     if(this.pollSync) {
       this.pollService.closePoll(this.poll.sessionId).subscribe({
         next: poll => this.session.signal({
-          data: JSON.stringify(poll),
+          data: undefined,
           to: undefined,
           type: "pollClosed"
         }),
-        error: error => alert("Ha ocurrido un error inesperado: " + error)
+        error: error => alert("An unexpected error occured: " + error)
       });
     } else {
       this._poll.status = "closed";
@@ -115,7 +118,7 @@ export class PollPanelComponent implements OnInit {
           this.exportResultsFilename = null;
           this.exportResultsHref = null;
         },
-        error: error => alert("Ha ocurrido un error inesperado: " + error)
+        error: error => alert("An unexpected error occured: " + error)
       });
     } else {
       this.session.signal({
@@ -134,7 +137,8 @@ export class PollPanelComponent implements OnInit {
         next: poll => {
           this.poll = poll;
           this.loadExportResults(this.poll);
-        }
+        },
+        error: error => alert("An unexpected error occured: " + error)
       });
     } else {
       this.loadExportResults(this.poll);
@@ -146,7 +150,6 @@ export class PollPanelComponent implements OnInit {
       alert("Poll results cannot be exported until the poll is closed");
       return;
     }
-    // const blob = new Blob([], {type: "application/json"});
     this.exportResultsFilename = this.session.sessionId+".poll.json";
     this.exportResultsHref = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(generatePollResults(poll), null, 2));
   }

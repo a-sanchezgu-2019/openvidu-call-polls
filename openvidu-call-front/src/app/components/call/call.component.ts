@@ -192,36 +192,51 @@ export class CallComponent implements OnInit {
 		this.panelService.togglePanel("poll-panel");
 	}
 
+	private fetchPoll() {
+		this.pollService.getPoll(this.sessionId).subscribe({
+			next: poll => this.poll = poll,
+			error: error => alert("An unexpected error occured. Error: " + error)
+		})
+	}
+
 	onPollCreated(event: SignalEvent) {
-    this.poll = JSON.parse(event.data);
-    console.info("Poll Creation: "+event.data);
+		if(this.pollSync) {
+			this.fetchPoll();
+		} else {
+    	this.poll = JSON.parse(event.data);
+		}
+    // console.info("Poll Creation: "+event.data);
 	}
 
 	onPollResponse(event: SignalEvent) {
 		if(this.poll && this.session.connection.role == 'MODERATOR') {
-			const data: number = parseInt(event.data);
-			console.info("Poll Response: "+data);
-			this.poll.totalResponses++;
-			this.poll.responses[data].result++;
-			console.info({role: this.session.connection.role, remoteConnections: this.session.remoteConnections, poll: this.poll});
-			if(this.pollSync && this.session.remoteConnections.size == this.poll.totalResponses) {
-				console.info("Trying to close poll...");
-				this.pollService.closePoll(this.session.sessionId).subscribe({
-					next: poll => this.poll = poll,
-					error: error => alert("Ha ocurrido un error inesperado: "+error)
-				});
+			if(this.pollSync) {
+				this.fetchPoll();
+			} else {
+				const data: number = parseInt(event.data);
+				this.poll.totalResponses++;
+				this.poll.responses[data].result++;
+				if(!this.poll.anonymous) {
+					let nickname = this.participantService.getRemoteParticipantByConnectionId(event.from.connectionId).getNickname();
+					this.poll.responses[data].participants.push(nickname);
+					this.poll.participants.push(nickname);
+				}
 			}
 		}
 	}
 
 	onPollClosed(event: SignalEvent) {
-    this.poll = JSON.parse(event.data);
-    console.info("Poll Closed: "+event.data);
+		if(this.pollSync) {
+			this.fetchPoll();
+		} else {
+			this.poll = JSON.parse(event.data);
+		}
+    // console.info("Poll Closed: "+event.data);
 	}
 
 	onPollDeleted(event: SignalEvent) {
 		this.poll = undefined;
-		console.info("Poll Deleted");
+		// console.info("Poll Deleted");
 	}
 
 }

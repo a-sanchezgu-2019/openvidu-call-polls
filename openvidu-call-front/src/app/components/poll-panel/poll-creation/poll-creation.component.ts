@@ -65,7 +65,7 @@ export class PollCreationComponent {
       if(environment.poll_sync) {
         this.pollService.createPoll(generatedPoll).subscribe({
           next: poll => callback(poll),
-          error: error => alert("Ha ocurrido un error inesperado: " + error)
+          error: error => alert("An unexpected error ocurred: " + error)
         });
       } else {
         callback(generatedPoll);

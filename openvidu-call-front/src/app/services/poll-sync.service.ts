@@ -3,8 +3,6 @@ import { Injectable } from '@angular/core';
 import { Poll } from 'src/app/models/poll.model';
 import { Observable, catchError, map, throwError, of } from 'rxjs';
 
-// const BASE_HREF: string = "http://localhost:5000/polls";
-
 @Injectable({
   providedIn: 'root'
 })
@@ -13,13 +11,6 @@ export class PollSyncService {
   private baseHref: string;
 
   constructor(private http: HttpClient) {
-    /* let cookies = new Map<string, string>();
-    for(let cookie of document.cookie.split(";")) {
-      let [key, value] = cookie.split("=");
-      if(key && value)
-        cookies.set(key.trim(), value.trim());
-    } */
-
     this.baseHref = '/' + (!!window.location.pathname.split('/')[1] ? window.location.pathname.split('/')[1] + '/polls' : 'polls');
   }
 
