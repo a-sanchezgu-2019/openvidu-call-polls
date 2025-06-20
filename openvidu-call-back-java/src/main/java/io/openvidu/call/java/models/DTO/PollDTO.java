@@ -1,91 +1,41 @@
 package io.openvidu.call.java.models.DTO;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
-import io.openvidu.call.java.models.Poll;
+import io.openvidu.call.java.models.polls.Poll;
+import io.openvidu.call.java.models.polls.PollOption;
+import io.openvidu.call.java.models.polls.PollStatus;
+import io.openvidu.call.java.models.polls.PollWithOptions;
+import io.openvidu.call.java.models.polls.PreferenceOrderPoll;
+import io.openvidu.call.java.models.polls.SingleOptionPoll;
+import io.openvidu.call.java.models.polls.LotteryPoll;
+import io.openvidu.call.java.models.polls.MultipleOptionPoll;
 
 public class PollDTO {
-
-    public class PollResponseDTO {
-
-        private String text;
-        private int result;
-        private List<String> participants;
-
-        public PollResponseDTO(String text, int result) {
-            this.text = text;
-            this.result = result;
-            participants = new ArrayList<>();
-        }
-
-        public PollResponseDTO(String text, int result, List<String> participants) {
-            this.text = text;
-            this.result = result;
-            this.participants = participants;
-        }
-
-        public String getText() {
-            return text;
-        }
-
-        public void setText(String text) {
-            this.text = text;
-        }
-
-        public int getResult() {
-            return result;
-        }
-
-        public void setResult(int result) {
-            this.result = result;
-        }
-
-        public List<String> getParticipants() {
-            return participants;
-        }
-
-        public void setParticipants(List<String> participants) {
-            this.participants = participants;
-        }
-
-        public void appendParticipant(String participant) {
-            this.participants.add(participant);
-        }
-
-        public String getParticipant(int index) throws IndexOutOfBoundsException {
-            return this.participants.get(index);
-        }
-
-        public boolean removeParticipant(String participant) {
-            return this.participants.remove(participant);
-        }
-
-        public String popParticipant(int index) throws IndexOutOfBoundsException {
-            return this.participants.remove(index);
-        }
-
-    }
 
     private String sessionId;
     private String status;
     private boolean anonymous;
     private String question;
-    private List<PollResponseDTO> responses;
-    private int totalResponses;
+    private String type;
+    private int totalParticipants;
     private List<String> participants;
-    private int responseIndex;
+    private Map<String, Object> data;
+    private List<Integer> responseIndices;
 
     public PollDTO(Poll poll, String participantId) {
 
         this.sessionId = poll.getSessionId();
-        this.status = poll.getStatus();
+        this.status = poll.getStatus().toString();
         this.anonymous = poll.isAnonymous();
         this.question = poll.getQuestion();
-        this.responses = new ArrayList<>();
-        this.totalResponses = poll.getTotalResponses();
         this.participants = new ArrayList<>();
-        this.responseIndex = -1;
+        this.totalParticipants = poll.getParticipants().size();
+        this.responseIndices = new ArrayList<>();
+        this.data = new HashMap<>();
         
         boolean addParticipants = !this.anonymous && (participantId == null || this.status.equals("closed"));
         
@@ -95,69 +45,82 @@ public class PollDTO {
             }
         }
         
-        for(int responseIndex = 0; responseIndex < poll.getResponses().size(); responseIndex++) {
-            Poll.PollResponse response = poll.getResponses().get(responseIndex);
-            PollResponseDTO responseDTO = new PollResponseDTO(response.getText(), response.getResult());
-            for(String responseParticipantId: response.getParticipants()) {
-                if(responseParticipantId.equals(participantId)) {
-                    this.responseIndex = responseIndex;
-                    if(!this.status.equals("closed"))
-                        this.status = "responded";
+        if(poll instanceof PollWithOptions) {
+
+            PollWithOptions pollWO = (PollWithOptions) poll;
+            ArrayList<PollOption> optionsDTO = new ArrayList<>();
+            for(PollOption option: pollWO.getOptions()) {
+                PollOption optionDTO = new PollOption(option.getText(), option.getResult(), null);
+                if(addParticipants) {
+                    for(String partId: option.getParticipants()) {
+                        if(poll.getParticipants().containsKey(partId))
+                            optionDTO.addParticipant(poll.getParticipants().get(partId));
+                    }
                 }
-                if(addParticipants)
-                    responseDTO.appendParticipant(poll.getParticipants().get(responseParticipantId));
+                optionsDTO.add(optionDTO);
             }
-            this.responses.add(responseDTO);
+            this.data.put("options", optionsDTO);
+
+            if(participantId != null) { // Destinatary is a participant
+                if(poll instanceof PreferenceOrderPoll) {
+                    PreferenceOrderPoll pollPO = (PreferenceOrderPoll) poll;
+                    List<Integer> preferenceOrder = pollPO.getPreferenceOrder(participantId);
+                    if(preferenceOrder != null) {
+                        if(poll.getParticipants().containsKey(participantId) && poll.getStatus() == PollStatus.PENDING)
+                            this.status = PollStatus.RESPONDED.toString();
+                        this.responseIndices.addAll(preferenceOrder);
+                    }
+                } else {
+                    for(int index = 0; index < pollWO.getNumOptions(); index++) {
+                        if(pollWO.getOption(index).getParticipants().contains(participantId)) {
+                            this.responseIndices.add(index);
+                            if(poll.getStatus() == PollStatus.PENDING)
+                                this.status = PollStatus.RESPONDED.toString();
+                        }
+                    }
+                }
+            }
+
+            if(poll instanceof SingleOptionPoll) {
+                this.type = "single_option";
+            } else if(poll instanceof MultipleOptionPoll) {
+                this.type = "multiple_option";
+                MultipleOptionPoll pollMO = (MultipleOptionPoll) poll;
+                this.data.put("minOptions", pollMO.getMinOptions());
+                this.data.put("maxOptions", pollMO.getMaxOptions());
+            } else if(poll instanceof PreferenceOrderPoll) {
+                this.type = "preference_order";
+                PreferenceOrderPoll pollPO = (PreferenceOrderPoll) poll;
+                this.data.put("minOptions", pollPO.getMinOptions());
+                this.data.put("maxOptions", pollPO.getMaxOptions());
+                this.data.put("pointsMapping", pollPO.getPointsMapping());
+            }
+
+        } else if(poll instanceof LotteryPoll) {
+
+            String winner = ((LotteryPoll) poll).getWinner();
+            if(winner != null)
+                winner = poll.getParticipants().get(winner);
+            this.data.put("winner", winner);
+
+            if(participantId != null) { // Destinatary is a participant
+                if(participantId == winner)
+                    this.responseIndices.add(1);
+                else if(poll.getParticipants().containsKey(participantId)) {
+                    this.responseIndices.add(0);
+                    if(poll.getStatus() == PollStatus.PENDING)
+                        this.status = PollStatus.RESPONDED.toString();
+                }
+            }
+
+            this.type = "lottery";
+
         }
 
     }
 
     public PollDTO(Poll poll) {
         this(poll, null);
-    }
-
-    public PollDTO(String sessionId, String status, boolean anonymous, String question, List<PollResponseDTO> responses, int totalResponses, List<String> participants, int responseIndex) {
-        this.sessionId = sessionId;
-        this.status = status;
-        this.anonymous = anonymous;
-        this.question = question;
-        this.responses = responses;
-        this.totalResponses = totalResponses;
-        this.participants = participants;
-        this.responseIndex = responseIndex;
-    }
-
-    public PollDTO(String sessionId, String status, boolean anonymous, String question, List<PollResponseDTO> responses, int totalResponses, int responseIndex) {
-        this.sessionId = sessionId;
-        this.status = status;
-        this.anonymous = anonymous;
-        this.question = question;
-        this.responses = responses;
-        this.totalResponses = totalResponses;
-        this.participants = new ArrayList<>();
-        this.responseIndex = responseIndex;
-    }
-
-    public PollDTO(String sessionId, String status, boolean anonymous, String question, List<PollResponseDTO> responses, int totalResponses, List<String> participants) {
-        this.sessionId = sessionId;
-        this.status = status;
-        this.anonymous = anonymous;
-        this.question = question;
-        this.responses = responses;
-        this.totalResponses = totalResponses;
-        this.participants = participants;
-        this.responseIndex = -1;
-    }
-
-    public PollDTO(String sessionId, String status, boolean anonymous, String question, List<PollResponseDTO> responses, int totalResponses) {
-        this.sessionId = sessionId;
-        this.status = status;
-        this.anonymous = anonymous;
-        this.question = question;
-        this.responses = responses;
-        this.totalResponses = totalResponses;
-        this.participants = new ArrayList<>();
-        this.responseIndex = -1;
     }
 
     public String getSessionId() {
@@ -192,20 +155,12 @@ public class PollDTO {
         this.question = question;
     }
 
-    public List<PollResponseDTO> getResponses() {
-        return responses;
+    public int getTotalParticipants() {
+        return totalParticipants;
     }
 
-    public void setResponses(List<PollResponseDTO> responses) {
-        this.responses = responses;
-    }
-
-    public int getTotalResponses() {
-        return totalResponses;
-    }
-
-    public void setTotalResponses(int totalResponses) {
-        this.totalResponses = totalResponses;
+    public void setTotalParticipants(int totalParticipants) {
+        this.totalParticipants = totalParticipants;
     }
 
     public List<String> getParticipants() {
@@ -232,12 +187,12 @@ public class PollDTO {
         return this.participants.remove(index);
     }
     
-    public int getResponseIndex() {
-        return this.responseIndex;
+    public List<Integer> getResponseIndices() {
+        return this.responseIndices;
     }
 
-    public void setResponseIndex(int responseIndex) {
-        this.responseIndex = responseIndex;
+    public void setResponseIndex(List<Integer> responseIndices) {
+        this.responseIndices = responseIndices;
     }
 
 }

@@ -1,5 +1,6 @@
 package io.openvidu.call.java.controllers;
 
+import javax.management.InvalidAttributeValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import io.openvidu.call.java.models.Poll;
+import io.openvidu.call.java.models.polls.Poll;
+import io.openvidu.call.java.models.polls.PollStatus;
+import io.openvidu.call.java.models.polls.creation.PollBuilder;
+import io.openvidu.call.java.models.polls.creation.PollDefinition;
+import io.openvidu.call.java.models.polls.exceptions.InvalidDefinitionPollException;
+import io.openvidu.call.java.models.polls.exceptions.PollException;
 import io.openvidu.call.java.models.DTO.PollDTO;
-import io.openvidu.call.java.models.Poll.PollResponse;
+import io.openvidu.call.java.models.polls.PollResponse;
+import io.openvidu.call.java.models.polls.PollResult;
 import io.openvidu.call.java.services.OpenViduService;
+import io.openvidu.call.java.services.PollService;
 
 /**
  * REST Controller that manages poll requests
@@ -33,10 +41,18 @@ public class PollController {
     private String OPENVIDU_URL;
 
     /**
-     * Service which provides functionality to manage the polls
+     * Service which provides functionality to manage the videoconference parameters
      */
 	@Autowired
 	private OpenViduService openviduService;
+
+    /**
+     * Service which provides functionality to manage polls
+     */
+	@Autowired
+	private PollService pollService;
+
+
 
     /**
      * Request used in order to create a new poll.
@@ -48,7 +64,7 @@ public class PollController {
      */
     @PostMapping("")
     public ResponseEntity<?> startPoll(
-        @RequestBody Poll poll,
+        @RequestBody PollDefinition definition,
         @CookieValue(name = OpenViduService.MODERATOR_TOKEN_NAME, defaultValue = "") String moderatorToken
     ) {
 
@@ -56,7 +72,15 @@ public class PollController {
         boolean isValidToken = openviduService.isModeratorSessionValid(sessionId, moderatorToken);
 
         if(!sessionId.isEmpty() && isValidToken) { // Is the moderator of the session
-            openviduService.updatePoll(poll);
+            definition.setSessionId(sessionId);
+            PollBuilder builder = new PollBuilder(definition);
+            Poll poll;
+            try {
+                poll = builder.build();
+            } catch (InvalidDefinitionPollException | InvalidAttributeValueException e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+            pollService.updatePoll(poll);
             return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().path("/{sessionId}").buildAndExpand(poll.getSessionId()).toUri()).body(new PollDTO(poll));
         }
         
@@ -80,7 +104,7 @@ public class PollController {
         @CookieValue(name = OpenViduService.PARTICIPANT_TOKEN_NAME, defaultValue = "") String participantToken,
         @CookieValue(name = OpenViduService.MODERATOR_TOKEN_NAME, defaultValue = "") String moderatorToken
     ) {
-        Poll poll = openviduService.getPoll(sessionId);
+        Poll poll = pollService.getPoll(sessionId);
         if(openviduService.isModeratorSessionValid(sessionId, moderatorToken)) { // Moderator
             if(poll == null)
                 return ResponseEntity.notFound().build();
@@ -96,11 +120,9 @@ public class PollController {
 
     /**
      * Updates the poll information. It's used by the users in order to respond the poll or by the moderators in order to close the poll
-     * You must provide a combination of <code>sessionID</code>, <code>status</code> and <code>moderatorToken)</code> (close a poll) or <code>sessionID</code>, <code>nickname</code> and <code>responseIndex</code> (respond a poll).
+     * Must be provided with a combination of <code>sessionID</code>, <code>status</code> and <code>moderatorToken)</code> (close a poll) or <code>sessionID</code>, <code>nickname</code> and <code>responseIndex</code> (respond a poll).
      * @param sessionId session ID of the call
-     * @param status status of the poll ('closed' or null)
-     * @param nickname nickname of the user
-     * @param responseIndex index of the response
+     * @param params parameters of the request
      * @param moderatorToken OpenVidu moderator token cookie
      * @return Response entity with the poll information
      */
@@ -108,50 +130,87 @@ public class PollController {
     public ResponseEntity<?> updatePoll(
         @PathVariable String sessionId,
         @RequestParam(required = false) String status,
-        @RequestParam(required = false) String nickname,
-        @RequestParam(required = false) Integer responseIndex,
+        @RequestBody(required = false) PollResponse response,
         @CookieValue(name = OpenViduService.PARTICIPANT_TOKEN_NAME, defaultValue = "") String participantToken,
         @CookieValue(name = OpenViduService.MODERATOR_TOKEN_NAME, defaultValue = "") String moderatorToken
     ) {
 
-        if(status == null && (nickname == null || responseIndex == null))
-            return ResponseEntity.badRequest().body("{ error: \"Needed one of these set of params: { status: string } || { nickname: string, responseIndex: number}\"}");
-
         boolean validModerator = openviduService.isModeratorSessionValid(sessionId, moderatorToken);
         boolean validParticipant = openviduService.isParticipantSessionValid(sessionId, participantToken);
+
+        if(!validModerator && !validParticipant)
+            return ResponseEntity.badRequest().build();
 
         if(status != null) {
 
             if(!validModerator)
                 return ResponseEntity.status(403).body("Could not change the poll status: Permission denied.");
                 
-            Poll poll = openviduService.getPoll(sessionId);
-
-            if(poll == null)
-                return ResponseEntity.notFound().build();
-            if(!status.equals("closed"))
+            PollStatus pollStatus = PollStatus.fromString(status);
+            if(pollStatus == null)
                 return ResponseEntity.badRequest().body("Invalid poll status");
 
-            poll.setStatus(status);
-            openviduService.updatePoll(poll);
+            Poll poll = pollService.getPoll(sessionId);
+            if(poll == null)
+                return ResponseEntity.notFound().build();
+                
+            if(pollStatus == PollStatus.CLOSED)
+                try {
+                    poll.close();
+                } catch (PollException e) {
+                    return ResponseEntity.badRequest().body(e.getMessage());
+                }
+            else
+                poll.setStatus(pollStatus);
+                pollService.updatePoll(poll);
             return ResponseEntity.ok(new PollDTO(poll));
 
-            
-        } else {
+        } else if(response != null /*&& params.containsKey("nickname")*/) {
             
             if(validModerator)
                 return ResponseEntity.badRequest().body("The moderator of the session can not respond a poll.");
             if(!validParticipant)
                 return ResponseEntity.status(403).body("Could not respond the poll: Permission denied.");
 
-            Poll poll = openviduService.respondPoll(sessionId, participantToken, nickname, responseIndex);
-            if(poll != null)
-                return ResponseEntity.ok(new PollDTO(poll, participantToken));
-            return ResponseEntity.notFound().build();
+            Poll poll = pollService.getPoll(sessionId);
+            if(poll == null)
+                return ResponseEntity.notFound().build();
+                
+            if(!poll.validResponse(response))
+                return ResponseEntity.badRequest().body("Invalid poll response");
+
+            response.setToken(participantToken);
+            try {
+                poll.respond(response);
+            } catch(PollException exception) {
+                return ResponseEntity.badRequest().body(exception.getMessage());
+            }
+
+            pollService.updatePoll(poll);
+            return ResponseEntity.ok(new PollDTO(poll, participantToken));
 
         }
 
+        return ResponseEntity.badRequest().body(String.format("Needed '%s' parameter.", validModerator? "status": "nickname"));
+
     }
+
+    @GetMapping("/{sessionId}/result")
+    public ResponseEntity<?> getPollResult(
+        @PathVariable String sessionId,
+        @CookieValue(name = OpenViduService.MODERATOR_TOKEN_NAME, defaultValue = "") String moderatorToken
+    ) {
+        if(!openviduService.isModeratorSessionValid(sessionId, moderatorToken))
+            return ResponseEntity.status(403).body("Permission Denied");
+        Poll poll = pollService.getPoll(sessionId);
+        if(poll == null)
+            return ResponseEntity.notFound().build();
+        PollResult result = poll.generatePollResult();
+        if(result == null)
+            return ResponseEntity.badRequest().body("Poll must be closed before generating its results.");
+        return ResponseEntity.ok(result);
+    }
+    
 
     /**
      * Deletes the poll from a session
@@ -164,7 +223,7 @@ public class PollController {
         @CookieValue(name = OpenViduService.MODERATOR_TOKEN_NAME, defaultValue = "") String moderatorToken) {
 
         if(openviduService.isModeratorSessionValid(sessionId, moderatorToken)) { // Is the moderator of the session
-            Poll poll = openviduService.deletePoll(sessionId);
+            Poll poll = pollService.deletePoll(sessionId);
             if(poll == null)
                 return ResponseEntity.notFound().build();
             return ResponseEntity.ok(new PollDTO(poll));
@@ -173,19 +232,5 @@ public class PollController {
         return ResponseEntity.status(403).body("Permissions denied to delete polls");
 
     }
-
-    /* private void logPoll(String title, Poll poll) {
-        System.out.println("##### POLL LOG #####");
-        System.out.printf("\tSession Id: \"%s\"\n", poll.getSessionId());
-        System.out.printf("\tStatus: \"%s\"\n", poll.getStatus());
-        System.out.printf("\tQuestion: \"%s\"\n", poll.getQuestion());
-        System.out.println("\tResponses:");
-        for(PollResponse response: poll.getResponses()) {
-            System.out.printf("\t\t\"%s\": %d\n", response.getText(), response.getResult());
-        }
-        System.out.printf("\tTotal Responses: %d\n", poll.getTotalResponses());
-        System.out.println("On "+title);
-        System.out.println("####################");
-    } */
     
 }

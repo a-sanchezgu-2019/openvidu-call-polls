@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import io.openvidu.call.java.models.Poll;
+import io.openvidu.call.java.models.polls.Poll;
 import io.openvidu.call.java.models.RecordingData;
 import io.openvidu.call.java.utils.RetryException;
 import io.openvidu.call.java.utils.RetryOptions;
@@ -289,76 +289,6 @@ public class OpenViduService {
 
 	public void stopBroadcast(String sessionId) throws OpenViduJavaClientException, OpenViduHttpException {
 		this.openvidu.stopBroadcast(sessionId);
-	}
-
-	// openvidu-call-polls code
-	
-	/**
-	 * Collection of polls identified by its session's id.
-	 */
-	private Map<String, Poll> polls = new HashMap<>();
-
-	/**
-	 * Update the poll in the poll collection.
-	 * @param poll
-	 */
-	public void updatePoll(Poll poll) {
-		polls.put(poll.getSessionId(), poll);
-	}
-
-	/**
-	 * Gets the poll identified by the sessionId.
-	 * @param sessionId Poll session ID
-	 * @return poll from polls collection
-	 */
-	public Poll getPoll(String sessionId) {
-		return polls.get(sessionId);
-	}
-
-	/**
-	 * Updates the poll information in order to registry the poll response.
-	 * @param sessionId session ID from the poll
-	 * @param nickname nickname which identifies the user
-	 * @param responseIndex index of the response
-	 * @return Updated poll
-	 */
-	public Poll respondPoll(String sessionId, String participantId, String nickname, int responseIndex) {
-		Poll poll = polls.get(sessionId);
-		if(poll == null)
-			return null;
-		try {
-			poll.getResponses().get(responseIndex).setResult(poll.getResponses().get(responseIndex).getResult() + 1);
-			poll.getResponses().get(responseIndex).appendParticipant(participantId);
-			poll.setTotalResponses(poll.getTotalResponses() + 1);
-			poll.putParticipant(participantId, nickname);
-		} catch (IndexOutOfBoundsException exception) {
-			return null;
-		}
-		updatePoll(poll);
-		return poll;
-	}
-
-	/**
-	 * Updates the poll information in order to registry the closure of the poll.
-	 * @param sessionId session ID of the poll
-	 * @return Updated poll
-	 */
-	public Poll closePoll(String sessionId) {
-		Poll poll = polls.get(sessionId);
-		if(poll == null)
-			return null;
-		poll.setStatus("closed");
-		updatePoll(poll);
-		return poll;
-	}
-
-	/**
-	 * Deletes the poll from the poll collection.
-	 * @param sessionId session ID of the poll
-	 * @return Previous poll associated with the session ID provided
-	 */
-	public Poll deletePoll(String sessionId) {
-		return polls.remove(sessionId);
 	}
 
 }
