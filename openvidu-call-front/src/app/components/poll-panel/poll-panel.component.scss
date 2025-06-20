@@ -57,28 +57,40 @@
 .response-data {
 	font-size: 12pt;
 	height: 100%;
-	width: 100%;
+	width: calc(100% - .5rem);
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	padding-left: .5rem;
 	position: absolute;
 	top: 0;
 	left: 0;
+}
+
+/*.response.participant-response > .response-data {
+	width: calc(100% - 1.5rem);
+}*/
+
+.response-data.moderator-response {
 	z-index: 2;
-	padding-left: .5rem;
 }
 
 .response-text {
-	margin-left: .5rem;
+	min-width: 50%;
+	padding-left: .5rem;
 }
 
-.response-percentage {
-	margin-right: 1rem;
+.response-percentage,
+.response-preference {
+	padding-right: 1.5rem;
+}
+
+.extra-text {
+	font-size: 12pt;
 }
 
 .total-responses {
 	font-size: 14pt;
-
 }
 
 .poll_action_btn {
@@ -110,4 +122,8 @@
 
 .error {
 	background-color: #FAA;
+}
+
+#general-error-container {
+	margin-top: 2rem;
 }

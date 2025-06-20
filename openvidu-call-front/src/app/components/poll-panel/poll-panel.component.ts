@@ -1,6 +1,6 @@
 import { Session } from 'openvidu-browser';
 import { Component, Input, OnInit } from '@angular/core';
-import { Poll, generatePollResults } from 'src/app/models/poll.model';
+import { Poll, LotteryPoll, PollWithOptions, PollResponse, SingleOptionPoll, PreferenceOrderPoll, PollResult } from 'src/app/models/poll.model';
 import { PollSyncService } from 'src/app/services/poll-sync.service';
 import { ParticipantService } from 'openvidu-angular';
 import { environment } from 'src/environments/environment';
@@ -22,18 +22,22 @@ export class PollPanelComponent implements OnInit {
     return this._poll;
   }
   set poll(poll: Poll) {
-    if(this.session.connection.role != 'MODERATOR' && poll != null) {
-      if(this.pollSync) {
-        this.responseIndex = poll.responseIndex?? -1;
-      } else {
+    if(poll != null) {
+      if(!this.pollSync && this.session.connection.role != 'MODERATOR') {
         let nickname = this.participantService.getLocalParticipant().getNickname();
         if(poll.participants?.includes(nickname)) {
-          for(let index = 0; index < poll.responses.length; index++) {
-            if(poll.responses[index].participants.includes(nickname)) {
-              this.responseIndex = index;
-              if(poll.status == 'pending')
-                poll.status = 'responded';
-              break;
+          if(poll instanceof LotteryPoll) {
+            poll.responseIndices.push(0);
+            if(poll.status == "pending")
+              poll.status = "responded";
+          } else if(poll instanceof PollWithOptions) {
+            for(let index = 0; index < poll.nOptions(); index++) {
+              if(poll.options[index].participants.includes(nickname)) {
+                this.poll.responseIndices.push(index);
+                if(poll.status == 'pending')
+                  poll.status = 'responded';
+                break;
+              }
             }
           }
         }
@@ -47,10 +51,12 @@ export class PollPanelComponent implements OnInit {
 
   private pollSync: boolean = environment.poll_sync;
 
-  responseIndex: number = -1;
+  responseIndices: number[] = [];
 
   exportResultsFilename: string = null;
   exportResultsHref: string = null;
+
+  generalError: string = null;
 
   constructor(private pollService: PollSyncService, private participantService: ParticipantService) { }
 
@@ -59,42 +65,73 @@ export class PollPanelComponent implements OnInit {
       this.fetchPoll();
   }
 
-  respondPoll(responseIndex: number) {
-    if(this.poll.status == "pending") {
-      let nickname = this.participantService.getLocalParticipant().getNickname();
-      this.responseIndex = responseIndex;
-      if(this.pollSync) {
-        this.pollService.respondPoll(this.poll.sessionId, nickname, responseIndex).subscribe({
-          next: poll => {
-            this.session.signal({
-              data: nickname,
-              to: undefined,
-              type: "pollResponse"
-            });
-            this._poll = poll;
-          },
-          error: error => alert("An unexpected error occured: " + error)
-        });
+  respondPoll() {
+    if(this.poll.status != "pending")
+      return;
+    let pollResponse = this.extractPollResponse();
+    if(pollResponse == null)
+      return;
+    this.generalError = this.poll.validateResponse(pollResponse);
+    if(this.generalError != "")
+      return;
+    if(this.pollSync) {
+      this.pollService.respondPoll(this.poll.sessionId, pollResponse).subscribe({
+        next: poll => {
+          this.session.signal({
+            data: pollResponse.nickname,
+            to: undefined,
+            type: "pollResponse"
+          });
+          this._poll = poll;
+        },
+        error: error => this.generalError = error.message
+      });
+    } else {
+      this.session.signal({
+        data: JSON.stringify(pollResponse),
+        to: undefined,
+        type: "pollResponse"
+      });
+      this._poll.status = "responded";
+    }
+  }
+
+  selectOption(optionIndex: number) {
+    if(!(this.poll instanceof PollWithOptions) || this.poll.status != "pending")
+      return;
+    let optPoll: PollWithOptions = this.poll as PollWithOptions;
+    if(optionIndex < 0 || optionIndex >= optPoll.options.length)
+      return;
+    if(optPoll instanceof SingleOptionPoll) {
+      this.poll.responseIndices = [optionIndex];
+    } else {
+      let indexIndex = this.poll.responseIndices.findIndex(value => value == optionIndex);
+      if(indexIndex == -1) {
+        this.poll.responseIndices.push(optionIndex);
       } else {
-        this.session.signal({
-          data: this.responseIndex.toString(),
-          to: undefined,
-          type: "pollResponse"
-        });
-        this._poll.status = "responded";
+        this.poll.responseIndices.splice(indexIndex, 1);
       }
     }
   }
 
   closePoll() {
+    if(!this.poll)
+      return;
+    if(this.poll.totalParticipants < 1) {
+      this.generalError = "Cannot close a poll without participants.";
+      return;
+    }
+    this.generalError = "";
     if(this.pollSync) {
       this.pollService.closePoll(this.poll.sessionId).subscribe({
-        next: poll => this.session.signal({
-          data: undefined,
-          to: undefined,
-          type: "pollClosed"
-        }),
-        error: error => alert("An unexpected error occured: " + error)
+        next: poll => {
+          this.session.signal({
+            data: undefined,
+            to: undefined,
+            type: "pollClosed"
+          });
+        },
+        error: error => this.generalError = error
       });
     } else {
       this._poll.status = "closed";
@@ -107,6 +144,7 @@ export class PollPanelComponent implements OnInit {
   }
 
   deletePoll() {
+    this.generalError = "";
     if(this.pollSync) {
       this.pollService.deletePoll(this.session.sessionId).subscribe({
         complete: () => {
@@ -118,7 +156,7 @@ export class PollPanelComponent implements OnInit {
           this.exportResultsFilename = null;
           this.exportResultsHref = null;
         },
-        error: error => alert("An unexpected error occured: " + error)
+        error: error => this.generalError = error
       });
     } else {
       this.session.signal({
@@ -131,49 +169,86 @@ export class PollPanelComponent implements OnInit {
     }
   }
 
+  getPointsMapping(optIndex: number): number | string {
+    if(!(this.poll instanceof PreferenceOrderPoll) || !this.poll.responseIndices.includes(optIndex))
+      return "";
+    return this.poll.responseIndices.findIndex(i => i == optIndex) + 1;
+  }
+
+  calculateOptionPercentaje(optIndex: number): number {
+    if(this.poll.totalParticipants == 0 || !(this.poll instanceof PollWithOptions) || optIndex >= this.poll.options.length)
+      return 0;
+    if(this.poll instanceof SingleOptionPoll) {
+      return 100 * this.poll.options[optIndex].result / this.poll.totalParticipants;
+    }
+    return 100 * this.poll.options[optIndex].result / this.poll.options.map(o => o.result).reduce((acum, v) => acum + v);
+  }
+
+  isLottery(): boolean {
+    return this.poll instanceof LotteryPoll;
+  }
+
+  isPollWithOptions(): boolean {
+    return this.poll instanceof PollWithOptions;
+  }
+
+  isPreferenceOrder(): boolean {
+    return this.poll instanceof PreferenceOrderPoll;
+  }
+
   loadExportCurrentResults() {
+    this.generalError = "";
+    if(this.poll.status != "closed") {
+      this.generalError = "Poll results cannot be exported until the poll is closed";
+      return;
+    }
     if(this.pollSync) {
-      this.pollService.getPoll(this.session.sessionId).subscribe({
-        next: poll => {
-          this.poll = poll;
-          this.loadExportResults(this.poll);
-        },
-        error: error => alert("An unexpected error occured: " + error)
+      this.pollService.getPollResults(this.session.sessionId).subscribe({
+        next: pollResult => this.setPollResultExportData(this.session.sessionId+".poll.result.json", pollResult),
+        error: error => this.generalError = error
       });
     } else {
       this.loadExportResults(this.poll);
     }
   }
 
-  private loadExportResults(poll: Poll) {
-    if(poll.status != "closed") {
-      alert("Poll results cannot be exported until the poll is closed");
-      return;
-    }
-    this.exportResultsFilename = this.session.sessionId+".poll.json";
-    this.exportResultsHref = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(generatePollResults(poll), null, 2));
+  logPoll() {
+      console.log(JSON.stringify(this._poll));
   }
 
-  private testPoll(): Poll {
-    return {
-      sessionId: this.session.sessionId,
-      status: "pending",
-      anonymous: true,
-      question: "Encuesta de prueba",
-      responses: [{text: "Respuesta 0", result: 0, participants: []}, {text: "Respuesta 1", result: 0, participants: []}],
-      totalResponses: 0,
-      participants: []
-    };
+  private extractPollResponse(): PollResponse {
+    let pollResponse = {
+      nickname: this.participantService.getLocalParticipant().getNickname(),
+      args: {}
+    }
+    if(this.poll instanceof PollWithOptions) {
+      if(this.poll.responseIndices) {
+        if(this.poll instanceof SingleOptionPoll) {
+          pollResponse.args = {optionIndex: this.poll.responseIndices[0]};
+        } else {
+          pollResponse.args = {options: this.poll.responseIndices.join(",")};
+        }
+      } else {
+        this.generalError = "You must select an option.";
+        return null;
+      }
+    }
+    return pollResponse;
+  }
+
+  private setPollResultExportData(filename: string, pollResult: PollResult) {
+    this.exportResultsFilename = filename?? "";
+    this.exportResultsHref = pollResult? "data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(pollResult, null, 2)): "";
+  }
+
+  private loadExportResults(poll: Poll) {
+    this.setPollResultExportData(this.session.sessionId+".poll.result.json", poll.generatePollResult());
   }
 
   private fetchPoll() {
     this.pollService.getPoll(this.session.sessionId, true).subscribe({
       next: poll => this.poll = poll
     });
-  }
-
-  logPoll() {
-      console.log(JSON.stringify(this._poll));
   }
 
 }

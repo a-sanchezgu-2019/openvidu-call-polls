@@ -1,6 +1,6 @@
 import { Session } from 'openvidu-browser';
 import { Component, Input } from '@angular/core';
-import { Poll, PollDefinition, generatePoll } from 'src/app/models/poll.model';
+import { LotteryPoll, MultipleOptionPoll, Poll, PollDefinition, PreferenceOrderPoll, SingleOptionPoll, generatePoll } from 'src/app/models/poll.model';
 import { environment } from 'src/environments/environment';
 import { PollSyncService } from 'src/app/services/poll-sync.service';
 
@@ -30,18 +30,20 @@ export class PollCreationComponent {
     this.pollDefinition = {
       anonymous: true,
       question: "",
-      responses: [{text: ""}, {text: ""}]
+      type: "single_option",
+      args: {options: [{text: ""}, {text: ""}]}
     };
     this.resetValidation();
   }
 
-  addEmptyResponse() {
-    this.pollDefinition.responses.push({text: ""});
+  addEmptyOption() {
+    (this.pollDefinition.args.options as {text: string}[])?.push({text: ""});
     this.resetValidation();
   }
 
-  removeResponse(responseIndex: number) {
-    this.pollDefinition.responses.splice(responseIndex, 1);
+  removeOption(responseIndex: number) {
+    if("options" in this.pollDefinition.args && this.pollDefinition.args.options instanceof Array)
+      this.pollDefinition.args.options.splice(responseIndex, 1);
     this.resetValidation();
   }
 
@@ -50,8 +52,6 @@ export class PollCreationComponent {
     this.validateCurrentDefinition();
 
     if(this.creationError == "") {
-
-      let generatedPoll = generatePoll(this.session.sessionId, this.pollDefinition);
 
       let callback = (poll: Poll) => {
         this.session.signal({
@@ -63,12 +63,16 @@ export class PollCreationComponent {
       };
 
       if(environment.poll_sync) {
-        this.pollService.createPoll(generatedPoll).subscribe({
+        this.pollService.createPoll(this.pollDefinition).subscribe({
           next: poll => callback(poll),
           error: error => alert("An unexpected error ocurred: " + error)
         });
       } else {
-        callback(generatedPoll);
+        let generatedPoll = generatePoll(this.session.sessionId, this.pollDefinition);
+        if(generatedPoll == null)
+          alert("An unexpected error ocurred: could not create the poll.");
+        else
+          callback(generatedPoll);
       }
 
     }
@@ -77,7 +81,7 @@ export class PollCreationComponent {
 
   validateCurrentDefinition() {
 
-    let validationResult = this.validatePollDefinition(this.pollDefinition);
+    let validationResult: string = this.validatePollDefinition(this.pollDefinition);
 
     if(validationResult == "") {
       this.creationError = "";
@@ -140,23 +144,74 @@ export class PollCreationComponent {
     this.logDefinition(this.pollDefinition, "Current");
   }
 
-  private validatePollDefinition(definition: PollDefinition): string {
+  changedPollType() {
 
-    if(definition.question == "") {
-      return "Please, enter a question|question";
-    }
-    if(definition.responses.length < 2) {
-      return "The poll needs at least 2 responses|";
-    }
+    if(this.pollDefinition.type == "lottery") {
 
-    for(let [index, response] of Object.entries(definition.responses)) {
-      if(response.text == "") {
-        return "Please, enter the response "+(parseInt(index) + 1)+"|response"+index;
+      if("options" in this.pollDefinition.args)
+        delete this.pollDefinition.args.options;
+      if("minOptions" in this.pollDefinition.args)
+        delete this.pollDefinition.args.minOptions;
+      if("maxOptions" in this.pollDefinition.args)
+        delete this.pollDefinition.args.maxOptions;
+      if("pointsMapping" in this.pollDefinition.args)
+        delete this.pollDefinition.args.pointsMapping;
+
+    } else {
+
+      if(!("options" in this.pollDefinition.args))
+        this.pollDefinition.args.options = [{text: ""}, {text: ""}];
+
+      if(this.pollDefinition.type == "single_option") {
+
+        if("minOptions" in this.pollDefinition.args)
+          delete this.pollDefinition.args.minOptions;
+        if("maxOptions" in this.pollDefinition.args)
+          delete this.pollDefinition.args.maxOptions;
+        if("pointsMapping" in this.pollDefinition.args)
+          delete this.pollDefinition.args.pointsMapping;
+
+      } else {
+
+        if(!("minOptions" in this.pollDefinition.args))
+          this.pollDefinition.args.minOptions = 1;
+        if(!("maxOptions" in this.pollDefinition.args))
+          this.pollDefinition.args.maxOptions = (this.pollDefinition.args.options as string[]).length;
+
+        if(this.pollDefinition.type == "multiple_option") {
+          if("pointsMapping" in this.pollDefinition.args)
+            delete this.pollDefinition.args.pointsMapping;
+        } else {
+          if(!("pointsMapping" in this.pollDefinition.args))
+            this.pollDefinition.args.pointsMapping = Array.from(Array(this.pollDefinition.args.maxOptions).keys()).reverse().map(value => value + 1);
+        }
+
       }
+
     }
 
-    return "";
+    this.resetValidation();
 
+  }
+
+  changedResponseOptionsLimit() {
+    if(this.pollDefinition.type == "preference_order" && (this.pollDefinition.args.pointsMapping as number[]).length != this.pollDefinition.args.maxOptions)
+      this.pollDefinition.args.pointsMapping = Array.from(Array(this.pollDefinition.args.maxOptions).keys()).reverse().map(value => value + 1);
+    this.resetValidation();
+  }
+
+  private validatePollDefinition(definition: PollDefinition): string {
+    switch(definition.type) {
+      case "lottery":
+        return LotteryPoll.validateDefinition(definition);
+      case "single_option":
+        return SingleOptionPoll.validateDefinition(definition);
+      case "multiple_option":
+        return MultipleOptionPoll.validateDefinition(definition);
+      case "preference_order":
+        return PreferenceOrderPoll.validateDefinition(definition);
+    }
+    return "Invalid poll type|type";
   }
 
   private logDefinition(definition: PollDefinition, text?: string) {

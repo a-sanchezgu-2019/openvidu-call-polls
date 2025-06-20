@@ -10,6 +10,20 @@
 	position: relative;
 }
 
+#options-form-group-title {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.form-group-title {
+	padding: .4rem;
+	margin-top: 1rem;
+	border-bottom: 1px solid darkgray;
+	font-size: 12pt;
+}
+
 .response-input-container {
 	width: 100%;
 	display: flex;
@@ -36,12 +50,26 @@
 	position: relative;
 }
 
+#response-options-limits-container {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	position: relative;
+}
+
+.response-options-limit {
+	width: 45%;
+	position: relative;
+	padding-top: .5rem;
+}
+
 #add-response-btn {
 	background-color: #44F;
 	color: white;
-	width: 100%;
-	padding: .5rem;
-	margin-top: 1rem;
+	width: 15%;
+	padding: .1rem;
+	/*margin-top: 1rem;*/
 }
 
 #anonymous-check {

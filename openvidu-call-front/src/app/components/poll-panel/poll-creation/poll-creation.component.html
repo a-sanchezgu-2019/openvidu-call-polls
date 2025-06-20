@@ -1,25 +1,48 @@
 <div *ngIf="this.pollDefinition else mod_no_poll_def">
   <form (submit)="createPoll()">
 
+    <label for="type-select">Type: </label>
+    <select name="type" id="type-select" class="poll-form-field" [(ngModel)]="this.pollDefinition.type" (ngModelChange)="this.resetValidation()">
+      <option value="single_option">Single Option</option>
+      <option value="lottery">Lottery</option>
+      <option value="multiple_option">Multiple Option</option>
+      <option value="preference_order">Preference Order</option>
+    </select>
+
+    <mat-slide-toggle [name]="'anonymous'" [(ngModel)]="this.pollDefinition.anonymous" (ngModelChange)="this.resetValidation()" id="anonymous-check">Anonymous</mat-slide-toggle>
+
     <mat-form-field id="question-input" class="poll-form-field" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'question'" [color]="this.creationErrorInput == 'question'? 'warn': 'primary'">
       <mat-label>Question</mat-label>
       <input matInput type="text" [name]="'question'" [(ngModel)]="this.pollDefinition.question" (ngModelChange)="this.resetValidation()"/>
     </mat-form-field>
-    <!-- <input id="question-input" [class.error]="this.creationErrorInput == 'question'" placeholder="Question" [(ngModel)]="this.pollDefinition.question" (ngModelChange)="this.resetValidation()" required/> -->
-    <div *ngFor="let response of this.pollDefinition.responses; let resIndex = index;" class="response-input-container">
-      <!-- <input class="response-input" [class.error]="this.creationErrorInput == 'response'+resIndex" [(ngModel)]="response.text" [placeholder]="'Response ' + (resIndex + 1)" (ngModelChange)="this.resetValidation()" required/> -->
-      <mat-form-field class="poll-form-field response-input" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'response'+resIndex" [color]="this.creationErrorInput == 'response'+resIndex? 'warn': 'primary'">
-        <mat-label>Response {{(resIndex + 1)}}</mat-label>
-        <input matInput type="text" [name]="'response-'+resIndex" [(ngModel)]="response.text" (ngModelChange)="this.resetValidation()"/>
-      </mat-form-field>
-      <button class="response-input-delete" matTooltip="Remove Response" matTooltipPosition="above" [color]="this.pollDefinition.responses.length < 3? 'disabled': ''" [disabled]="this.pollDefinition.responses.length < 3" (click)="this.removeResponse(resIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
-    </div>
-    <button id="add-response-btn" type="button" matTooltip="Add Response" (click)="addEmptyResponse()" mat-raised-button><mat-icon>add</mat-icon></button>
 
-    <mat-slide-toggle [name]="'anonymous'" [(ngModel)]="this.pollDefinition.anonymous" (ngModelChange)="this.resetValidation()" id="anonymous-check">Anonymous</mat-slide-toggle>
+    <ng-container *ngIf="this.pollDefinition.type != 'lottery'">
+      <div id="options-form-group-title" class="form-group-title">
+        <div>Options</div>
+        <button id="add-response-btn" type="button" matTooltip="Add Response" (click)="addEmptyOption()" mat-raised-button><mat-icon>add</mat-icon></button>
+      </div>
+      <div *ngFor="let option of this.pollDefinition.args.options; let optIndex = index;" class="response-input-container">
+        <mat-form-field class="poll-form-field response-input" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'option'+optIndex" [color]="this.creationErrorInput == 'option'+optIndex? 'warn': 'primary'">
+          <mat-label>Option {{optIndex + 1}}</mat-label>
+          <input matInput type="text" [id]="'input_option-'+optIndex" [name]="'option-'+optIndex" [(ngModel)]="option.text" (ngModelChange)="this.resetValidation()"/>
+        </mat-form-field>
+        <button class="response-input-delete" matTooltip="Remove Response" matTooltipPosition="above" [color]="this.pollDefinition.args.options.length < 3? 'disabled': ''" [disabled]="this.pollDefinition.args.options.length < 3" (click)="this.removeOption(optIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
+      </div>
+    </ng-container>
 
-    <div *ngIf="this.creationError != ''" class="container error" id="creation-error">{{this.creationError}}</div>
-    <div *ngIf="this.creationError == '' && this.exportFilename != null && this.exportHref != null" id="export-valid" class="container valid">Validated poll.</div>
+    <ng-container *ngIf="this.pollDefinition.type == 'multiple_option' || this.pollDefinition.type == 'preference_order'">
+      <div id="response-options-limits-form-group-title" class="form-group-title">Limits</div>
+      <div id="response-options-limits-container">
+        <mat-form-field id="response-min-options-field" class="poll-form-field response-options-limit" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'minOptions'" [color]="this.creationErrorInput == 'minOptions'? 'warn': 'primary'">
+          <mat-label>Min Options</mat-label>
+          <input matInput type="number" name="minOptions" [(ngModel)]="this.pollDefinition.args.minOptions" min="1" [max]="this.pollDefinition.args.options.length" (ngModelChange)="this.changedResponseOptionsLimit()"/>
+        </mat-form-field>
+        <mat-form-field id="response-max-options-field" class="poll-form-field response-options-limit" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'maxOptions'" [color]="this.creationErrorInput == 'maxOptions'? 'warn': 'primary'">
+          <mat-label>Max Options</mat-label>
+          <input matInput type="number" name="maxOptions" [(ngModel)]="this.pollDefinition.args.maxOptions" [min]="this.pollDefinition.args.minOptions" [max]="this.pollDefinition.args.options.length" (ngModelChange)="this.changedResponseOptionsLimit()"/>
+        </mat-form-field>
+      </div>
+    </ng-container>
 
     <div class="poll_action_buttons">
       <button *ngIf="this.exportFilename == null || this.exportHref == null" class="poll_action_icon_btn" type="button" matTooltip="Validate Poll" (click)="validateCurrentDefinition()" mat-raised-button><mat-icon>done</mat-icon></button>
@@ -31,6 +54,8 @@
     <input id="import-input" (change)="importSelectedPoll($event.target.files[0])" type="file" accept=".json,application/json" multiple="false" #importInput/>
 
     <div *ngIf="this.exportFilename == null || this.exportHref == null" id="export-note" class="container note">You must validate your poll before exporting it.</div>
+    <div *ngIf="this.creationError != ''" class="container error" id="creation-error">{{this.creationError}}</div>
+    <div *ngIf="this.creationError == '' && this.exportFilename != null && this.exportHref != null" id="export-valid" class="container valid">Validated poll.</div>
 
     <button *ngIf="!this.production" (click)="logCurrentDefinition()" type="button" class="poll_action_btn" mat-raised-button>LOG DEF</button>
 

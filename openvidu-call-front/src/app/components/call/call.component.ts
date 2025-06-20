@@ -16,7 +16,7 @@ import {
 } from 'openvidu-angular';
 
 import { RestService } from 'src/app/services/rest.service';
-import { Poll } from 'src/app/models/poll.model';
+import { Poll, PollResponse } from 'src/app/models/poll.model';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -203,9 +203,8 @@ export class CallComponent implements OnInit {
 		if(this.pollSync) {
 			this.fetchPoll();
 		} else {
-    	this.poll = JSON.parse(event.data);
+			this.poll = JSON.parse(event.data);
 		}
-    // console.info("Poll Creation: "+event.data);
 	}
 
 	onPollResponse(event: SignalEvent) {
@@ -213,14 +212,9 @@ export class CallComponent implements OnInit {
 			if(this.pollSync) {
 				this.fetchPoll();
 			} else {
-				const data: number = parseInt(event.data);
-				this.poll.totalResponses++;
-				this.poll.responses[data].result++;
-				if(!this.poll.anonymous) {
-					let nickname = this.participantService.getRemoteParticipantByConnectionId(event.from.connectionId).getNickname();
-					this.poll.responses[data].participants.push(nickname);
-					this.poll.participants.push(nickname);
-				}
+				const response: PollResponse = JSON.parse(event.data) as PollResponse;
+				if(this.poll?.validResponse(response))
+					this.poll.respond(response);
 			}
 		}
 	}
@@ -231,12 +225,10 @@ export class CallComponent implements OnInit {
 		} else {
 			this.poll = JSON.parse(event.data);
 		}
-    // console.info("Poll Closed: "+event.data);
 	}
 
 	onPollDeleted(event: SignalEvent) {
 		this.poll = undefined;
-		// console.info("Poll Deleted");
 	}
 
 }
