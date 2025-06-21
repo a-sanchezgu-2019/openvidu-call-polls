@@ -91,7 +91,39 @@
 							"extractLicenses": true,
 							"vendorChunk": false,
 							"buildOptimizer": true
-						}
+						},
+            "docker": {
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "2mb",
+									"maximumError": "5mb"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "6kb",
+									"maximumError": "10kb"
+								}
+							],
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.docker.ts"
+                },
+								{
+									"replace": "src/proxy.conf.json",
+									"with": "src/proxy.conf.docker.json"
+								}
+              ],
+							"optimization": true,
+							"outputHashing": "all",
+							"sourceMap": false,
+							"namedChunks": false,
+							"aot": true,
+							"extractLicenses": true,
+							"vendorChunk": false,
+							"buildOptimizer": true
+            }
 					}
 				},
 				"serve": {
@@ -106,6 +138,9 @@
 						},
 						"production": {
 							"browserTarget": "openvidu-call:build:production"
+						},
+						"docker": {
+							"browserTarget": "openvidu-call:build:docker"
 						}
 					}
 				},

@@ -36,7 +36,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf = http.cors().and()
 				.csrf().disable().authorizeRequests()
 				.antMatchers("/call/**").permitAll()
-				.antMatchers("/auth/**").permitAll();
+				.antMatchers("/auth/**").permitAll()
+				.antMatchers("/polls/**").permitAll();
 		
 		if(CALL_PRIVATE_ACCESS.equals("ENABLED")) {
 			conf.and().authorizeRequests().antMatchers("/recordings/**").authenticated();
