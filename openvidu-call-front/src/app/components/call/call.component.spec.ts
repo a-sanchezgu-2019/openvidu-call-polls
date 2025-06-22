@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, } from '@angular/common/http/testing';
 
 import { CallComponent } from './call.component';
 
@@ -8,7 +9,8 @@ describe('CallComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CallComponent ]
+      declarations: [ CallComponent ],
+      imports: [ HttpClientTestingModule ]
     })
     .compileComponents();
   });

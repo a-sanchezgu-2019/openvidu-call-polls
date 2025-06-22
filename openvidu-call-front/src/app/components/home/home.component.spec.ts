@@ -3,6 +3,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 
 import { HomeComponent } from './home.component';
 import { UntypedFormBuilder } from '@angular/forms';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('HomeComponent', () => {
 	let component: HomeComponent;
@@ -12,7 +13,7 @@ describe('HomeComponent', () => {
 		TestBed.configureTestingModule({
 			declarations: [HomeComponent],
 			providers: [UntypedFormBuilder],
-			imports: [RouterTestingModule.withRoutes([])]
+			imports: [RouterTestingModule.withRoutes([]), HttpClientTestingModule]
 		}).compileComponents();
 	}));
 

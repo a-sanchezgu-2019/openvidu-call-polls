@@ -7,7 +7,8 @@ module.exports = function (config) {
 		frameworks: ['jasmine', '@angular-devkit/build-angular'],
 		plugins: [
 			require('karma-jasmine'),
-			require('karma-chrome-launcher'),
+			// require('karma-chrome-launcher'),
+			require('karma-firefox-launcher'),
 			require('karma-jasmine-html-reporter'),
 			require('karma-coverage-istanbul-reporter'),
 			require('karma-notify-reporter'),
@@ -19,6 +20,19 @@ module.exports = function (config) {
 		customLaunchers: {
 			ChromeHeadless: {
 				base: 'Chrome',
+				flags: [
+					'--headless',
+					'--disable-gpu',
+					'--disable-translate',
+					'--disable-extensions',
+					// Without a remote debugging port, Google Chrome exits immediately.
+					'--no-sandbox',
+					'--remote-debugging-port=9222',
+					'--js-flags="--max_old_space_size=4096"'
+				]
+			},
+			FirefoxHeadless: {
+				base: "Firefox",
 				flags: [
 					'--headless',
 					'--disable-gpu',
@@ -56,14 +70,15 @@ module.exports = function (config) {
 			'progress',
 			'kjhtml',
 			'dots',
-			// 'coverage-istanbul', // (https://github.com/mattlewis92/karma-coverage-istanbul-reporter/issues/49, https://github.com/angular/angular-cli/issues/10940)
+			'coverage-istanbul', // (https://github.com/mattlewis92/karma-coverage-istanbul-reporter/issues/49, https://github.com/angular/angular-cli/issues/10940)
 			'notify'
 		],
 		port: 9876,
 		colors: true,
 		logLevel: config.LOG_INFO,
 		autoWatch: true,
-		browsers: ['ChromeHeadless'],
+		// browsers: ['ChromeHeadless'],
+		browsers: ['FirefoxHeadless'],
 		singleRun: false
 	});
 };

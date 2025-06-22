@@ -36,4 +36,16 @@ export class OpenViduCallPO {
 		await this.waitForElement('#media-buttons-container');
 		expect(await this.isPresent('#media-buttons-container')).to.be.true;
 	}
+
+	async checkActionButtonsArePresent(): Promise<void> {
+		await this.waitForElement('#toolbar');
+		await this.waitForElement('#menu-buttons-container');
+		expect(await this.isPresent('#menu-buttons-container')).to.be.true;
+	}
+
+	async writeOnElement(selector: string, value: string) {
+		const element = await this.waitForElement(selector);
+		element.sendKeys(...value.split(""));
+	}
+
 }

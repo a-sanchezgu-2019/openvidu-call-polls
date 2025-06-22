@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, } from '@angular/common/http/testing';
 
 import { AdminDashboardComponent } from './admin-dashboard.component';
 
@@ -8,7 +9,8 @@ describe('AdminDashboardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AdminDashboardComponent ]
+      declarations: [ AdminDashboardComponent ],
+      imports: [ HttpClientTestingModule ]
     })
     .compileComponents();
   });

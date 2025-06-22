@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { PollPanelComponent } from './poll-panel.component';
 
@@ -8,7 +9,8 @@ describe('PollPanelComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ PollPanelComponent ]
+      declarations: [ PollPanelComponent ],
+      imports: [ HttpClientTestingModule ]
     })
     .compileComponents();
 
