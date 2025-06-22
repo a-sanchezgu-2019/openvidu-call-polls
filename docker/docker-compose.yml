@@ -1,0 +1,32 @@
+services:
+  openvidu:
+    image: openvidu/openvidu-dev:2.28.0
+    ports:
+      - 4443:4443
+    networks:
+      - openvidu-call-polls-network
+    environment:
+      - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+    restart: on-failure
+
+  openvidu-call-polls:
+    depends_on:
+      - openvidu
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - ${OPENVIDU_CALL_PORT}:${OPENVIDU_CALL_PORT}
+    networks:
+      - openvidu-call-polls-network
+    environment:
+      - SERVER_ADDRESS=openvidu-call-polls
+      - SERVER_PORT=${OPENVIDU_CALL_PORT}
+      - OPENVIDU_URL=http://openvidu:4443
+      - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+    restart: on-failure
+
+
+networks:
+  openvidu-call-polls-network:
+    driver: bridge

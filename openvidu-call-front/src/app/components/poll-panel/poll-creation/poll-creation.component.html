@@ -1,5 +1,5 @@
 <div *ngIf="this.pollDefinition else mod_no_poll_def">
-  <form (submit)="createPoll()">
+  <form id="poll-creation-form" (submit)="createPoll()">
 
     <label for="type-select">Type: </label>
     <select name="type" id="type-select" class="poll-form-field" [(ngModel)]="this.pollDefinition.type" (ngModelChange)="this.resetValidation()">
@@ -26,7 +26,7 @@
           <mat-label>Option {{optIndex + 1}}</mat-label>
           <input matInput type="text" [id]="'input_option-'+optIndex" [name]="'option-'+optIndex" [(ngModel)]="option.text" (ngModelChange)="this.resetValidation()"/>
         </mat-form-field>
-        <button class="response-input-delete" matTooltip="Remove Response" matTooltipPosition="above" [color]="this.pollDefinition.args.options.length < 3? 'disabled': ''" [disabled]="this.pollDefinition.args.options.length < 3" (click)="this.removeOption(optIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
+        <button [id]="'rm-btn-option-'+optIndex" class="response-input-delete" matTooltip="Remove Response" matTooltipPosition="above" [color]="this.pollDefinition.args.options.length < 3? 'disabled': ''" [disabled]="this.pollDefinition.args.options.length < 3" (click)="this.removeOption(optIndex)" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
       </div>
     </ng-container>
 
@@ -35,11 +35,11 @@
       <div id="response-options-limits-container">
         <mat-form-field id="response-min-options-field" class="poll-form-field response-options-limit" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'minOptions'" [color]="this.creationErrorInput == 'minOptions'? 'warn': 'primary'">
           <mat-label>Min Options</mat-label>
-          <input matInput type="number" name="minOptions" [(ngModel)]="this.pollDefinition.args.minOptions" min="1" [max]="this.pollDefinition.args.options.length" (ngModelChange)="this.changedResponseOptionsLimit()"/>
+          <input matInput id="min-options-input" type="number" name="minOptions" [(ngModel)]="this.pollDefinition.args.minOptions" min="1" [max]="this.pollDefinition.args.options.length" (ngModelChange)="this.changedResponseOptionsLimit()"/>
         </mat-form-field>
         <mat-form-field id="response-max-options-field" class="poll-form-field response-options-limit" appearance="outline" subscriptSizing="dynamic" [class.poll-form-field-invalid]="this.creationErrorInput == 'maxOptions'" [color]="this.creationErrorInput == 'maxOptions'? 'warn': 'primary'">
           <mat-label>Max Options</mat-label>
-          <input matInput type="number" name="maxOptions" [(ngModel)]="this.pollDefinition.args.maxOptions" [min]="this.pollDefinition.args.minOptions" [max]="this.pollDefinition.args.options.length" (ngModelChange)="this.changedResponseOptionsLimit()"/>
+          <input matInput id="max-options-input" type="number" name="maxOptions" [(ngModel)]="this.pollDefinition.args.maxOptions" [min]="this.pollDefinition.args.minOptions" [max]="this.pollDefinition.args.options.length" (ngModelChange)="this.changedResponseOptionsLimit()"/>
         </mat-form-field>
       </div>
     </ng-container>
@@ -47,8 +47,8 @@
     <div class="poll_action_buttons">
       <button *ngIf="this.exportFilename == null || this.exportHref == null" class="poll_action_icon_btn" type="button" matTooltip="Validate Poll" (click)="validateCurrentDefinition()" mat-raised-button><mat-icon>done</mat-icon></button>
       <a *ngIf="this.exportFilename != null && this.exportHref != null" [href]="this.exportHref" [download]="this.exportFilename" type="button" class="poll_action_icon_btn" matTooltip="Export Definition" mat-raised-button><mat-icon>get_app</mat-icon></a>
-      <button class="poll_action_icon_btn" type="button" matTooltip="Import Poll" (click)="importInput.click();" mat-raised-button><mat-icon>publish</mat-icon></button>
-      <button class="poll_action_icon_btn" type="submit" matTooltip="Create Poll" mat-raised-button><mat-icon>forward</mat-icon></button>
+      <button id="import-poll-def-btn" class="poll_action_icon_btn" type="button" matTooltip="Import Poll" (click)="importInput.click();" mat-raised-button><mat-icon>publish</mat-icon></button>
+      <button id="submit-poll-def-btn" class="poll_action_icon_btn" type="submit" matTooltip="Create Poll" mat-raised-button><mat-icon>forward</mat-icon></button>
     </div>
 
     <input id="import-input" (change)="importSelectedPoll($event.target.files[0])" type="file" accept=".json,application/json" multiple="false" #importInput/>

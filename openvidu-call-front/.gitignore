@@ -7,3 +7,5 @@
 # Libraries
 node_modules/
 
+# Builds
+dist/

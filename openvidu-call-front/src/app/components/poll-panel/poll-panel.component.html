@@ -20,14 +20,14 @@
       </ng-container>
 
       <ng-template #poll_with_options>
-        <div *ngFor="let option of this.poll.options; let optIndex = index" class="response participant-response" [ngClass]="{'pending': this.poll.status == 'pending', 'responded': this.poll.responseIndices.includes(optIndex)}" (click)="selectOption(optIndex)">
+        <div *ngFor="let option of this.poll.options; let optIndex = index" [id]="'option-'+optIndex" class="response participant-response" [ngClass]="{'pending': this.poll.status == 'pending', 'responded': this.poll.responseIndices.includes(optIndex)}" (click)="selectOption(optIndex)">
           <div class="response-data">
             <div class="response-text">{{option.text}}</div>
             <div *ngIf="this.poll.status == 'closed' && !this.poll.anonymous" class="response-percentage">{{this.calculateOptionPercentaje(optIndex) | number : '1.0-2'}}%</div>
             <div *ngIf="this.isPreferenceOrder()" class="response-preference">{{this.getPointsMapping(optIndex)}}</div>
           </div>
         </div>
-        <button *ngIf="this.poll.status == 'pending'" class="poll_action_btn" matTooltip="Submit Response" (click)="respondPoll()" mat-raised-button>SUBMIT</button>
+        <button *ngIf="this.poll.status == 'pending'" id="submit-poll-response-btn" class="poll_action_btn" matTooltip="Submit Response" (click)="respondPoll()" mat-raised-button>SUBMIT</button>
         <div *ngIf="this.poll.status == 'closed'" class="container extra-text">Poll has been closed</div>
       </ng-template>
 
@@ -63,11 +63,11 @@
         The winner is {{this.poll.winner}}!
       </div>
 
-      <button *ngIf="this.poll.status == 'pending'" (click)="closePoll()" class="poll_action_btn" matTooltip="Close Poll" mat-raised-button>CLOSE POLL</button>
+      <button *ngIf="this.poll.status == 'pending'" id="poll-close-btn" (click)="closePoll()" class="poll_action_btn" matTooltip="Close Poll" mat-raised-button>CLOSE POLL</button>
       <div *ngIf="this.poll.status == 'closed'" class="poll_action_buttons">
-        <button (click)="deletePoll()" class="poll_action_icon_btn" matTooltip="Delete Poll" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
-        <button *ngIf="this.exportResultsFilename == null || this.exportResultsHref == null" (click)="loadExportCurrentResults()" class="poll_action_icon_btn" matTooltip="Prepare Results" mat-raised-button><mat-icon>sync</mat-icon></button>
-        <a *ngIf="this.exportResultsFilename != null && this.exportResultsHref != null" [href]="this.exportResultsHref" [download]="exportResultsFilename" type="button" class="poll_action_icon_btn" matTooltip="Export Results" mat-raised-button><mat-icon>get_app</mat-icon></a>
+        <button id="poll-rm-btn" (click)="deletePoll()" class="poll_action_icon_btn" matTooltip="Delete Poll" mat-raised-button><mat-icon>delete_outline</mat-icon></button>
+        <button *ngIf="this.exportResultsFilename == null || this.exportResultsHref == null" id="poll-prepare-export-btn" (click)="loadExportCurrentResults()" class="poll_action_icon_btn" matTooltip="Prepare Results" mat-raised-button><mat-icon>sync</mat-icon></button>
+        <a *ngIf="this.exportResultsFilename != null && this.exportResultsHref != null" id="poll-export-btn" [href]="this.exportResultsHref" [download]="exportResultsFilename" type="button" class="poll_action_icon_btn" matTooltip="Export Results" mat-raised-button><mat-icon>get_app</mat-icon></a>
       </div>
 
       <div *ngIf="this.generalError" class="container error" id="general-error-container">{{this.generalError}}</div>

@@ -48,6 +48,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			conf.and().authorizeRequests().antMatchers("/sessions/**").permitAll();
 		}
 		
+		// Other URLs can be accessed without authentication
+		http.authorizeRequests().anyRequest().permitAll();
+		
 		conf.and().httpBasic();
 
 	}

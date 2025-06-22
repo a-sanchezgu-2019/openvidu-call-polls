@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import io.openvidu.call.java.models.polls.Poll;
 import io.openvidu.call.java.models.RecordingData;
 import io.openvidu.call.java.utils.RetryException;
 import io.openvidu.call.java.utils.RetryOptions;
