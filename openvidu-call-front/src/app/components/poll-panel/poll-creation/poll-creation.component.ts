@@ -65,12 +65,12 @@ export class PollCreationComponent {
       if(environment.poll_sync) {
         this.pollService.createPoll(this.pollDefinition).subscribe({
           next: poll => callback(poll),
-          error: error => alert("An unexpected error ocurred: " + error)
+          error: error => this.creationError = "An unexpected error ocurred: " + error
         });
       } else {
         let generatedPoll = generatePoll(this.session.sessionId, this.pollDefinition);
         if(generatedPoll == null)
-          alert("An unexpected error ocurred: could not create the poll.");
+          this.creationError = "An unexpected error ocurred: could not create the poll.";
         else
           callback(generatedPoll);
       }
@@ -105,28 +105,25 @@ export class PollCreationComponent {
           let definition: PollDefinition = object as PollDefinition;
           let validationResult = this.validatePollDefinition(definition);
           if(validationResult == "") {
-            if(confirm("Do you want to overwrite your current poll with the imported one?")) {
-              this.pollDefinition = definition;
-              this.resetValidation();
-            }
+            this.pollDefinition = definition;
+            this.resetValidation();
           } else {
-            validationResult = validationResult.split("|")[0];
-            alert("Error Importing: "+validationResult);
+            this.creationError = "Error Importing: "+validationResult.split("|")[0];
           }
         } catch(e) {
           if(e instanceof TypeError) {
-            alert("Imported file is not a PollDefinition: "+e.message);
+            this.creationError = "Imported file is not a PollDefinition: "+e.message;
           } else {
             console.error(e);
-            alert("An unexpected error occurred");
+            this.creationError = "An unexpected error occurred";
           }
         }
       } catch (e) {
         if(e instanceof SyntaxError) {
-          alert("Imported file is not in JSON format");
+          this.creationError = "Imported file is not a valid JSON file";
         } else {
-          console.error(e);
-          alert("An unexpected error occurred");
+            console.error(e);
+            this.creationError = "An unexpected error occurred";
         }
       }
     });

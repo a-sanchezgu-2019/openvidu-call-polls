@@ -117,10 +117,6 @@ export class PollPanelComponent implements OnInit {
   closePoll() {
     if(!this.poll)
       return;
-    if(this.poll.totalParticipants < 1) {
-      this.generalError = "Cannot close a poll without participants.";
-      return;
-    }
     this.generalError = "";
     if(this.pollSync) {
       this.pollService.closePoll(this.poll.sessionId).subscribe({
@@ -198,10 +194,6 @@ export class PollPanelComponent implements OnInit {
 
   loadExportCurrentResults() {
     this.generalError = "";
-    if(this.poll.status != "closed") {
-      this.generalError = "Poll results cannot be exported until the poll is closed";
-      return;
-    }
     if(this.pollSync) {
       this.pollService.getPollResults(this.session.sessionId).subscribe({
         next: pollResult => this.setPollResultExportData(this.session.sessionId+".poll.result.json", pollResult),

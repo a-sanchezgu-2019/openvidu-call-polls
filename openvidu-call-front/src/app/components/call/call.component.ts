@@ -195,7 +195,7 @@ export class CallComponent implements OnInit {
 	private fetchPoll() {
 		this.pollService.getPoll(this.sessionId).subscribe({
 			next: poll => this.poll = poll,
-			error: error => alert("An unexpected error occured. Error: " + error)
+			error: error => console.error("An unexpected error occured: " + error)
 		})
 	}
 

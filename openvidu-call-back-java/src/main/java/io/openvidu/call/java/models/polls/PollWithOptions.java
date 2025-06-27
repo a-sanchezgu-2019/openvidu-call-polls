@@ -55,14 +55,19 @@ public abstract class PollWithOptions extends Poll {
             if(!this.isAnonymous()) {
                 for(String participantToken: option.getParticipants())
                     resultOptionParticipants.add(this.getParticipants().get(participantToken));
+                resultOption.put("participants", resultOptionParticipants);
             }
-            resultOption.put("participants", resultOptionParticipants);
             resultOption.put("result", option.getResult());
             resultOptions.add(resultOption);
             resultSum += option.getResult();
         }
-        for(int optIndex = 0; optIndex < this.getNumOptions(); optIndex++) {
-            resultOptions.get(optIndex).put("percentage", this.options.get(optIndex).getResult() * 100.0 / resultSum);
+        if(resultSum != 0) {
+            for(int optIndex = 0; optIndex < this.getNumOptions(); optIndex++) {
+                resultOptions.get(optIndex).put(
+                    "percentage",
+                    this.options.get(optIndex).getResult() * 100.0 / resultSum
+                );
+            }
         }
         result.putData("options", resultOptions);
         return result;

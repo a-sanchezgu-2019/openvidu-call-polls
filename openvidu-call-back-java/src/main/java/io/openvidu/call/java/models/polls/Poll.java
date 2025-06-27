@@ -9,7 +9,6 @@ import java.util.Objects;
 import io.openvidu.call.java.models.polls.exceptions.AlreadyClosedPollException;
 import io.openvidu.call.java.models.polls.exceptions.AlreadyRespondedPollException;
 import io.openvidu.call.java.models.polls.exceptions.InvalidResponsePollException;
-import io.openvidu.call.java.models.polls.exceptions.NoParticipantsPollException;
 import io.openvidu.call.java.models.polls.exceptions.PollException;
 
 public abstract class Poll {
@@ -58,13 +57,11 @@ public abstract class Poll {
         return participants.size() == totalParticipants;
     }
 
-    public void close() throws AlreadyClosedPollException, PollException, NoParticipantsPollException {
+    public void close() throws AlreadyClosedPollException, PollException {
         if(status.equals(PollStatus.CLOSED))
             throw new AlreadyClosedPollException(sessionId, null, "poll has already been closed");
         if(!validate())
             throw new PollException(sessionId, "tried to close a poll with an invalid state");
-        if(this.getTotalParticipants() < 1)
-            throw new NoParticipantsPollException(sessionId, "Cannot close a poll without participants.");
         status = PollStatus.CLOSED;
     }
 
