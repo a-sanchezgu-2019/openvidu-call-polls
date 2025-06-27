@@ -115,7 +115,7 @@ public class PollController {
                 return ResponseEntity.notFound().build();
             return ResponseEntity.ok(new PollDTO(poll, participantToken));
         }
-        return ResponseEntity.status(403).body("Could not update the poll: Permission denied.");
+        return ResponseEntity.status(403).body("Could not get the poll: Permission denied.");
     }
 
     /**
@@ -129,71 +129,67 @@ public class PollController {
     @PutMapping("/{sessionId}")
     public ResponseEntity<?> updatePoll(
         @PathVariable String sessionId,
-        @RequestParam(required = false) String status,
-        @RequestBody(required = false) PollResponse response,
-        @CookieValue(name = OpenViduService.PARTICIPANT_TOKEN_NAME, defaultValue = "") String participantToken,
+        @RequestParam String status,
         @CookieValue(name = OpenViduService.MODERATOR_TOKEN_NAME, defaultValue = "") String moderatorToken
     ) {
 
-        boolean validModerator = openviduService.isModeratorSessionValid(sessionId, moderatorToken);
-        boolean validParticipant = openviduService.isParticipantSessionValid(sessionId, participantToken);
+        if(!openviduService.isModeratorSessionValid(sessionId, moderatorToken))
+            return ResponseEntity.status(403).body("Could not change the poll status: Permission denied.");
 
-        if(!validModerator && !validParticipant)
-            return ResponseEntity.badRequest().build();
+        PollStatus pollStatus = PollStatus.fromString(status);
+        if(pollStatus == null)
+            return ResponseEntity.badRequest().body("Invalid poll status");
 
-        if(status != null) {
-
-            if(!validModerator)
-                return ResponseEntity.status(403).body("Could not change the poll status: Permission denied.");
+        Poll poll = pollService.getPoll(sessionId);
+        if(poll == null)
+            return ResponseEntity.notFound().build();
                 
-            PollStatus pollStatus = PollStatus.fromString(status);
-            if(pollStatus == null)
-                return ResponseEntity.badRequest().body("Invalid poll status");
-
-            Poll poll = pollService.getPoll(sessionId);
-            if(poll == null)
-                return ResponseEntity.notFound().build();
-                
-            if(pollStatus == PollStatus.CLOSED)
-                try {
-                    poll.close();
-                } catch (PollException e) {
-                    return ResponseEntity.badRequest().body(e.getMessage());
-                }
-            else
-                poll.setStatus(pollStatus);
-                pollService.updatePoll(poll);
-            return ResponseEntity.ok(new PollDTO(poll));
-
-        } else if(response != null /*&& params.containsKey("nickname")*/) {
-            
-            if(validModerator)
-                return ResponseEntity.badRequest().body("The moderator of the session can not respond a poll.");
-            if(!validParticipant)
-                return ResponseEntity.status(403).body("Could not respond the poll: Permission denied.");
-
-            Poll poll = pollService.getPoll(sessionId);
-            if(poll == null)
-                return ResponseEntity.notFound().build();
-                
-            if(!poll.validResponse(response))
-                return ResponseEntity.badRequest().body("Invalid poll response");
-
-            response.setToken(participantToken);
+        if(pollStatus == PollStatus.CLOSED)
             try {
-                poll.respond(response);
-            } catch(PollException exception) {
-                return ResponseEntity.badRequest().body(exception.getMessage());
+                poll.close();
+            } catch (PollException e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
             }
-
-            pollService.updatePoll(poll);
-            return ResponseEntity.ok(new PollDTO(poll, participantToken));
-
-        }
-
-        return ResponseEntity.badRequest().body(String.format("Needed '%s' parameter.", validModerator? "status": "nickname"));
+        else
+            poll.setStatus(pollStatus);
+        pollService.updatePoll(poll);
+        return ResponseEntity.ok(new PollDTO(poll));
 
     }
+
+    @PostMapping("/{sessionId}/response")
+    public ResponseEntity<?> respondPoll(
+        @PathVariable String sessionId,
+        @RequestBody PollResponse response,
+        @CookieValue(name = OpenViduService.MODERATOR_TOKEN_NAME, defaultValue = "") String moderatorToken,
+        @CookieValue(name = OpenViduService.PARTICIPANT_TOKEN_NAME, defaultValue = "") String participantToken
+    ) {
+            
+        if(!openviduService.isParticipantSessionValid(sessionId, participantToken))
+            return ResponseEntity.status(403).body("Could not respond the poll: Permission denied.");
+
+        if(openviduService.isModeratorSessionValid(sessionId, moderatorToken))
+            return ResponseEntity.badRequest().body("The moderator cannot respond a poll");
+
+        Poll poll = pollService.getPoll(sessionId);
+        if(poll == null)
+            return ResponseEntity.notFound().build();
+
+        if(!poll.validResponse(response))
+            return ResponseEntity.badRequest().body("Invalid poll response");
+
+        response.setToken(participantToken);
+        try {
+            poll.respond(response);
+        } catch(PollException exception) {
+            return ResponseEntity.badRequest().body(exception.getMessage());
+        }
+
+        pollService.updatePoll(poll);
+        return ResponseEntity.ok(new PollDTO(poll, participantToken));
+
+    }
+    
 
     @GetMapping("/{sessionId}/result")
     public ResponseEntity<?> getPollResult(

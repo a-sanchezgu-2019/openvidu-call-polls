@@ -31,7 +31,7 @@ export class PollSyncService {
 
   respondPoll(sessionId: string, pollResponse: PollResponse): Observable<Poll> {
     let backResponse = {token: null, ...pollResponse};
-    return this.http.put(this.baseHref + "/" + sessionId, backResponse).pipe(
+    return this.http.post(this.baseHref + "/" + sessionId + "/response", backResponse).pipe(
       map(response => parsePollDTO(response as PollDTO)),
       catchError(error => this.handleError(error))
     ) as Observable<Poll>;

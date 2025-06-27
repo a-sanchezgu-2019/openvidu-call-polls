@@ -9,3 +9,7 @@ node_modules/
 
 # Builds
 dist/
+
+#Test Results
+playwright-report/
+test-results/
