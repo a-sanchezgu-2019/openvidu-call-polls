@@ -208,6 +208,10 @@ export class PollPanelComponent implements OnInit {
       console.log(JSON.stringify(this._poll));
   }
 
+  getTotalPercentage(): number {
+    return this.session.remoteConnections.size? Math.round(100 * (this.poll?.totalParticipants?? 0) / this.session.remoteConnections.size): 0;
+  }
+
   private extractPollResponse(): PollResponse {
     let pollResponse = {
       nickname: this.participantService.getLocalParticipant().getNickname(),

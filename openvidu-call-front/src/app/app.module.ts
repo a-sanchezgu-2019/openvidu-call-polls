@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -45,6 +46,7 @@ const config: OpenViduAngularConfig = {
 		MatExpansionModule,
 		MatIconModule,
 		MatInputModule,
+		MatSelectModule,
 		MatSlideToggleModule,
 		MatToolbarModule,
 		MatTooltipModule,

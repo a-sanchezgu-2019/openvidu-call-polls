@@ -1,5 +1,7 @@
 <div id="poll-panel" class="container">
-  <h2>POLL PANEL</h2>
+  <div class="panel-header-container">
+    <h3 class="panel-title">Polls</h3>
+  </div>
 
   <div *ngIf="this.session.connection.role != 'MODERATOR' else mod_poll" id="poll-container">
 
@@ -27,7 +29,7 @@
             <div *ngIf="this.isPreferenceOrder()" class="response-preference">{{this.getPointsMapping(optIndex)}}</div>
           </div>
         </div>
-        <button *ngIf="this.poll.status == 'pending'" id="submit-poll-response-btn" class="poll_action_btn" matTooltip="Submit Response" (click)="respondPoll()" mat-raised-button>SUBMIT</button>
+        <button *ngIf="this.poll.status == 'pending'" id="submit-poll-response-btn" class="poll_action_btn" matTooltip="Submit Response" (click)="respondPoll()" mat-raised-button>SUBMIT <mat-icon>forward</mat-icon></button>
         <div *ngIf="this.poll.status == 'closed'" class="container extra-text">Poll has been closed</div>
       </ng-template>
 
@@ -57,7 +59,7 @@
         </div>
       </ng-container>
 
-      <div class="total-responses">{{this.poll.totalParticipants}} of {{this.session.remoteConnections.size}} participants responded</div>
+      <div class="total-responses">{{this.getTotalPercentage()}}% ({{this.poll.totalParticipants}} of {{this.session.remoteConnections.size}}) participants responded</div>
 
       <div *ngIf="this.isLottery() && this.poll.status == 'closed' else responseless_open" class="container extra-text" [class.valid]="this.poll.responseIndices && this.poll.responseIndices[0] == 1">
         The winner is {{this.poll.winner}}!
