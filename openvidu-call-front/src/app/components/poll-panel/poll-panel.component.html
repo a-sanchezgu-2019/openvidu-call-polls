@@ -22,6 +22,7 @@
       </ng-container>
 
       <ng-template #poll_with_options>
+        <div *ngIf="this.poll.status == 'pending'" class="container info-text">{{this.selectOptionsText()}}</div>
         <div *ngFor="let option of this.poll.options; let optIndex = index" [id]="'option-'+optIndex" class="response participant-response" [ngClass]="{'pending': this.poll.status == 'pending', 'responded': this.poll.responseIndices.includes(optIndex)}" (click)="selectOption(optIndex)">
           <div class="response-data">
             <div class="response-text">{{option.text}}</div>
@@ -41,7 +42,7 @@
 
     <ng-template #no_poll>
       <div>
-        <p class="no-poll-text">There is no poll in process. Wait until the moderators of the session create one.</p>
+        <p class="no-poll-text container">There is no poll in process. Wait until the moderators of the session create one.</p>
       </div>
     </ng-template>
 

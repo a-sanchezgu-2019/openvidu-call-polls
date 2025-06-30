@@ -117,7 +117,7 @@ public abstract class Poll {
         if(this.status != PollStatus.CLOSED)
             return null;
         List<String> participants = this.isAnonymous()? null: new ArrayList<>(this.getParticipants().values());
-        return new PollResult(sessionId, "", anonymous, question, participants, null);
+        return new PollResult(sessionId, "", anonymous, question, participants, totalParticipants, null);
     }
 
 }

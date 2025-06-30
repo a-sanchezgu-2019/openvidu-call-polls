@@ -1,6 +1,6 @@
 import { PollSyncService } from './../../services/poll-sync.service';
 import { Session, SignalEvent } from 'openvidu-browser';
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import {
 	BroadcastingError,
@@ -16,7 +16,7 @@ import {
 } from 'openvidu-angular';
 
 import { RestService } from 'src/app/services/rest.service';
-import { Poll, PollResponse } from 'src/app/models/poll.model';
+import { generatePollDTO, LotteryPoll, MultipleOptionPoll, parsePollDTO, Poll, PollDTO, PollOption, PollResponse, PollWithOptions, PreferenceOrderPoll, SingleOptionPoll } from 'src/app/models/poll.model';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -178,6 +178,7 @@ export class CallComponent implements OnInit {
 		this.session.on("signal:pollResponse", event => this.onPollResponse(event));
 		this.session.on("signal:pollClosed", event => this.onPollClosed(event));
 		this.session.on("signal:pollDeleted", event => this.onPollDeleted(event));
+		this.session.on("signal:pollGet", event => this.onPollGet(event));
 	}
 
 	private subscribeToPanelToggling() {
@@ -203,7 +204,7 @@ export class CallComponent implements OnInit {
 		if(this.pollSync) {
 			this.fetchPoll();
 		} else {
-			this.poll = JSON.parse(event.data);
+			this.poll = parsePollDTO(JSON.parse(event.data) as PollDTO);
 		}
 	}
 
@@ -211,7 +212,7 @@ export class CallComponent implements OnInit {
 		if(this.poll && this.session.connection.role == 'MODERATOR') {
 			if(this.pollSync) {
 				this.fetchPoll();
-			} else {
+			} else if(event.from !== undefined) {
 				const response: PollResponse = JSON.parse(event.data) as PollResponse;
 				if(this.poll?.validResponse(response))
 					this.poll.respond(response);
@@ -223,12 +224,81 @@ export class CallComponent implements OnInit {
 		if(this.pollSync) {
 			this.fetchPoll();
 		} else {
-			this.poll = JSON.parse(event.data);
+			this.poll = parsePollDTO(JSON.parse(event.data) as PollDTO);
 		}
 	}
 
 	onPollDeleted(event: SignalEvent) {
-		this.poll = undefined;
+		if(event.from?.role == "MODERATOR") {
+			this.poll = undefined;
+		}
+	}
+
+	onPollGet(event: SignalEvent) {
+		if(this.session.connection.role === "MODERATOR") {
+			if(event.from !== undefined) {
+				this.session.signal({
+					data: this.poll? JSON.stringify(this.parseParticipantPoll(event.from.connectionId)): null,
+					to: [event.from],
+					type: "pollGet"
+				});
+			}
+		} else if(event.data !== null && event.data !== "") {
+			this.poll = parsePollDTO(JSON.parse(event.data) as PollDTO);
+		}
+	}
+
+	private parseParticipantPoll(id: string): PollDTO {
+		if(this.poll instanceof LotteryPoll) {
+			return generatePollDTO(new LotteryPoll(
+				this.poll.sessionId,
+				this.poll.anonymous,
+				this.poll.question,
+				this.poll.status
+			));
+		}
+		let emptyOptions: PollOption[] = (this.poll as PollWithOptions).options.map(option => {
+			return {text: option.text, result: 0, participants: []}
+		});
+		if(this.poll instanceof SingleOptionPoll) {
+			return generatePollDTO(new SingleOptionPoll(
+				this.poll.sessionId,
+				this.poll.anonymous,
+				this.poll.question,
+				this.poll.status,
+				[],
+				[],
+				emptyOptions
+			));
+		}
+		if(this.poll instanceof MultipleOptionPoll) {
+			return generatePollDTO(new MultipleOptionPoll(
+				this.poll.sessionId,
+				this.poll.anonymous,
+				this.poll.question,
+				this.poll.status,
+				[],
+				[],
+				emptyOptions,
+				this.poll.maxOptions,
+				this.poll.minOptions
+			));
+		}
+		if(this.poll instanceof PreferenceOrderPoll) {
+			return generatePollDTO(new PreferenceOrderPoll(
+				this.poll.sessionId,
+				this.poll.anonymous,
+				this.poll.question,
+				this.poll.status,
+				[],
+				[],
+				emptyOptions,
+				this.poll.maxOptions,
+				this.poll.minOptions,
+				new Map(),
+				this.poll.pointsMapping
+			));
+		}
 	}
 
 }

@@ -5,10 +5,12 @@ export interface PollResponse {
 
 export interface PollResult {
 
+  sessionId: string;
+  type: string;
   anonymous: boolean;
   question: string;
-  type: string;
   participants?: Array<string>;
+  totalParticipants: number;
   data: Map<string, any>;
 
 }
@@ -39,15 +41,9 @@ export abstract class Poll {
     this.responseIndices = responseIndices?? [];
   }
 
-  validResponse(response: PollResponse): boolean {
-    return !this.participants.includes(response.nickname);
-  };
+  abstract validResponse(response: PollResponse): boolean;
 
-  validateResponse(response: PollResponse): string {
-    if(this.participants.includes(response.nickname))
-      return "You have already submit a response";
-    return "";
-  }
+  abstract validateResponse(response: PollResponse): string;
 
   respond(response: PollResponse): boolean {
     if(!this.validResponse(response))
@@ -65,9 +61,11 @@ export abstract class Poll {
     if(this.status != "closed")
       return null;
     let result = {
-      anonymous: this.anonymous,
+      sessionId: this.sessionId,
       type: "base",
+      anonymous: this.anonymous,
       question: this.question,
+      participants: [],
       totalParticipants: this.totalParticipants,
       data: new Map<string, any>()
     } as PollResult;
@@ -139,6 +137,14 @@ export class LotteryPoll extends Poll {
     return result;
   }
 
+  override validResponse(response: PollResponse): boolean {
+      return true;
+  }
+
+  override validateResponse(response: PollResponse): string {
+      return "";
+  }
+
 }
 
 export abstract class PollWithOptions extends Poll {
@@ -175,16 +181,24 @@ export abstract class PollWithOptions extends Poll {
     let result = super.generatePollResult();
     if(result == null)
       return null;
-    let resultOptions: Array<PollOption>;
+    let resultOptions: Array<any>;
+    let totalSum: number = this.options.map(option => option.result).reduce((acum, curr) => acum + curr);
     if(this.anonymous) {
       resultOptions = [];
       for(let option of this.options) {
         let resOpt = {...option};
-        resOpt.participants = [];
-        resultOptions.push(resOpt);
+        delete resOpt.participants;
+        resultOptions.push({...resOpt, percentage: 100 * resOpt.result / totalSum});
       }
     } else {
-      resultOptions = this.options;
+      resultOptions = this.options.map(option => {
+        return {
+          text: option.text,
+          participants: option.participants,
+          result: option.result,
+          percentage: 100 * option.result / totalSum
+        }
+      });
     }
     result.data.set("options", resultOptions);
     return result;
@@ -195,17 +209,12 @@ export abstract class PollWithOptions extends Poll {
 export class SingleOptionPoll extends PollWithOptions {
 
   override validResponse(response: PollResponse): boolean {
-    if(!super.validResponse(response))
-      return false;
     if(!("optionIndex" in response.args) || typeof response.args.optionIndex != "number")
       return false;
     return response.args.optionIndex < this.nOptions();
   }
 
   override validateResponse(response: PollResponse): string {
-    let result = super.validateResponse(response);
-    if(result != "")
-      return result;
     if(!("optionIndex" in response.args) || typeof response.args.optionIndex != "number")
       return "Please, select an option";
     return "";
@@ -265,8 +274,6 @@ export class MultipleOptionPoll extends PollWithOptions {
   }
 
   override validResponse(response: PollResponse): boolean {
-    if(!super.validResponse(response))
-      return false;
     if(!("options" in response.args) || typeof response.args.options != "string")
       return false;
     let options = response.args.options.split(",").map(Number);
@@ -286,9 +293,6 @@ export class MultipleOptionPoll extends PollWithOptions {
   }
 
   override validateResponse(response: PollResponse): string {
-    let result = super.validateResponse(response);
-    if(result != "")
-      return result;
     if(!("options" in response.args) || typeof response.args.options != "string" || response.args.options == "")
       return "Please, select at least "+this.minOptions+" option(s).";
     let options = response.args.options.split(",").map(Number);
@@ -379,8 +383,6 @@ export class PreferenceOrderPoll extends PollWithOptions {
   }
 
   override validResponse(response: PollResponse): boolean {
-    if(!super.validResponse(response))
-      return false;
     if(!("options" in response.args) || typeof response.args.options != "string")
       return false;
     let options = response.args.options.split(",").map(Number);
@@ -400,9 +402,6 @@ export class PreferenceOrderPoll extends PollWithOptions {
   }
 
   override validateResponse(response: PollResponse): string {
-    let result = super.validateResponse(response);
-    if(result != "")
-      return result;
     if(!("options" in response.args) || typeof response.args.options != "string" || response.args.options == "")
       return "Please, select at least "+this.minOptions+" option(s).";
     console.log(response.args.options);
@@ -503,4 +502,37 @@ export function parsePollDTO(pollDTO: PollDTO): Poll {
   if(poll != null)
     poll.totalParticipants = pollDTO.totalParticipants;
   return poll;
+}
+
+export function generatePollDTO(poll: Poll): PollDTO {
+  let result: PollDTO = {
+    sessionId: poll.sessionId,
+    anonymous: poll.anonymous,
+    type: "",
+    question: poll.question,
+    status: poll.status,
+    participants: [...poll.participants],
+    totalParticipants: poll.totalParticipants,
+    responseIndices: [...poll.responseIndices],
+    data: {}
+  };
+  if(poll instanceof LotteryPoll){
+    result.type = "lottery";
+    result.data.winner = poll.winner
+  } else if(poll instanceof PollWithOptions) {
+    result.data.options = [...poll.options.map(option => {return {...option}})];
+    if(poll instanceof SingleOptionPoll) {
+      result.type = "single_option";
+    } else if(poll instanceof MultipleOptionPoll) {
+      result.type = "multiple_option";
+      result.data.minOptions = poll.minOptions;
+      result.data.maxOptions = poll.maxOptions;
+    } else if(poll instanceof PreferenceOrderPoll) {
+      result.type = "preference_order";
+      result.data.minOptions = poll.minOptions;
+      result.data.maxOptions = poll.maxOptions;
+      result.data.pointsMapping = poll.pointsMapping;
+    }
+  }
+  return result;
 }

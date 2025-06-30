@@ -12,20 +12,25 @@ public class PollResult {
     private boolean anonymous;
     private String question;
     private List<String> participants;
+    private int totalParticipants;
     private Map<String, Object> data;
 
-    public PollResult(String sessionId, String type, boolean anonymous, String question, List<String> participants,
-            Map<String, Object> data) {
+    public PollResult(String sessionId, String type, boolean anonymous, String question, List<String> participants, int totalParticipants, Map<String, Object> data) {
         this.sessionId = sessionId;
         this.type = type;
         this.anonymous = anonymous;
         this.question = question;
         this.participants = participants != null? participants: new ArrayList<>();
+        this.totalParticipants = totalParticipants;
         this.data = data != null? data: new LinkedHashMap<>();
     }
 
+    public PollResult(String sessionId, String type, boolean anonymous, String question, int totalParticipants) {
+        this(sessionId, type, anonymous, question, null, totalParticipants, null);
+    }
+
     public PollResult(String sessionId, String type, boolean anonymous, String question) {
-        this(sessionId, type, anonymous, question, null, null);
+        this(sessionId, type, anonymous, question, null, 0, null);
     }
 
     public String getSessionId() {
@@ -70,6 +75,14 @@ public class PollResult {
 
     public void addParticipant(String participant) {
         this.participants.add(participant);
+    }
+
+    public int getTotalParticipants() {
+        return this.totalParticipants;
+    }
+
+    public void setTotalParticipants(int totalParticipants) {
+        this.totalParticipants = totalParticipants;
     }
 
     public Object getData(String key) {

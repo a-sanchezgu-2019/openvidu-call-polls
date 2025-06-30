@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { parsePollDTO, Poll, PollDefinition, PollDTO, PollResponse, PollResult } from 'src/app/models/poll.model';
 import { Observable, catchError, map, throwError, of } from 'rxjs';

@@ -1,6 +1,6 @@
-import { Session } from 'openvidu-browser';
+import { Connection, Session } from 'openvidu-browser';
 import { Component, Input, OnInit } from '@angular/core';
-import { Poll, LotteryPoll, PollWithOptions, PollResponse, SingleOptionPoll, PreferenceOrderPoll, PollResult } from 'src/app/models/poll.model';
+import { Poll, LotteryPoll, PollWithOptions, PollResponse, SingleOptionPoll, PreferenceOrderPoll, PollResult, MultipleOptionPoll, generatePollDTO } from 'src/app/models/poll.model';
 import { PollSyncService } from 'src/app/services/poll-sync.service';
 import { ParticipantService } from 'openvidu-angular';
 import { environment } from 'src/environments/environment';
@@ -63,6 +63,24 @@ export class PollPanelComponent implements OnInit {
   ngOnInit(): void {
     if(this.pollSync)
       this.fetchPoll();
+    } else if(this.session.connection.role !== "MODERATOR" && this._poll === undefined) {
+      // Retrieve poll from moderator
+      let connection = this.getModeratorConnection();
+      this.session.signal({
+        data: null,
+        to: connection === undefined? undefined: [connection],
+        type: "pollGet"
+      });
+    }
+  }
+
+  getModeratorConnection(): Connection | undefined {
+    let result: Connection | undefined;
+    this.session.remoteConnections.forEach((connection, key) => {
+      if(connection.role === "MODERATOR")
+        result = connection;
+    });
+    return result;
   }
 
   respondPoll() {
@@ -77,9 +95,15 @@ export class PollPanelComponent implements OnInit {
     if(this.pollSync) {
       this.pollService.respondPoll(this.poll.sessionId, pollResponse).subscribe({
         next: poll => {
+          let to: Connection[] | undefined;
+          if(this.poll.anonymous) {
+            let connection = this.getModeratorConnection();
+            if(connection !== undefined)
+              to = [connection];
+          }
           this.session.signal({
             data: pollResponse.nickname,
-            to: undefined,
+            to: to,
             type: "pollResponse"
           });
           this._poll = poll;
@@ -87,9 +111,15 @@ export class PollPanelComponent implements OnInit {
         error: error => this.generalError = error.message
       });
     } else {
+      let to: Connection[] | undefined;
+      if(this.poll.anonymous) {
+        let connection = this.getModeratorConnection();
+        if(connection !== undefined)
+          to = [connection];
+      }
       this.session.signal({
         data: JSON.stringify(pollResponse),
-        to: undefined,
+        to: to,
         type: "pollResponse"
       });
       this._poll.status = "responded";
@@ -132,7 +162,7 @@ export class PollPanelComponent implements OnInit {
     } else {
       this._poll.status = "closed";
       this.session.signal({
-        data: JSON.stringify(this.poll),
+        data: JSON.stringify(generatePollDTO(this.poll)),
         to: undefined,
         type: "pollClosed"
       });
@@ -192,6 +222,30 @@ export class PollPanelComponent implements OnInit {
     return this.poll instanceof PreferenceOrderPoll;
   }
 
+  selectOptionsText(): string {
+    if(!(this.poll instanceof PollWithOptions))
+      return "";
+    let result = "Select ";
+    let minOpts = 1;
+    let maxOpts = 1;
+    if(this.poll instanceof SingleOptionPoll)
+      return result + "an option";
+    if(this.poll instanceof MultipleOptionPoll) {
+      minOpts = this.poll.minOptions;
+      maxOpts = this.poll.maxOptions;
+    } else if(this.poll instanceof PreferenceOrderPoll) {
+      minOpts = this.poll.minOptions;
+      maxOpts = this.poll.maxOptions;
+    }
+    let singleNumber: boolean = minOpts == maxOpts;
+    if(singleNumber) {
+      if(maxOpts == 1)
+        return result + "an option";
+      return result + maxOpts + " options";
+    }
+    return result + "from " + minOpts + " to " + maxOpts + " options" + (this.poll instanceof PreferenceOrderPoll? " in order of preference": "");
+  }
+
   loadExportCurrentResults() {
     this.generalError = "";
     if(this.pollSync) {
@@ -233,8 +287,17 @@ export class PollPanelComponent implements OnInit {
   }
 
   private setPollResultExportData(filename: string, pollResult: PollResult) {
+    let mapReplacer = (key, value) => {
+      if(value instanceof Map) {
+        for(let key of value.keys())
+          if(typeof key !== "string")
+            return "";
+        return Object.fromEntries(value.entries());
+      }
+      return value;
+    }
     this.exportResultsFilename = filename?? "";
-    this.exportResultsHref = pollResult? "data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(pollResult, null, 2)): "";
+    this.exportResultsHref = pollResult? "data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(pollResult, mapReplacer, 2)): "";
   }
 
   private loadExportResults(poll: Poll) {

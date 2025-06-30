@@ -87,6 +87,7 @@
 
 .extra-text {
 	font-size: 12pt;
+	background-color: #EEE;
 }
 
 .total-responses {
@@ -118,6 +119,13 @@
 
 .no-poll-text {
 	font-size: 13pt;
+	width: calc(100% - 2rem);
+	background-color: #DDD;
+}
+
+.info-text {
+	background-color: #EEE;
+	margin-bottom: 1rem;
 }
 
 .error {
