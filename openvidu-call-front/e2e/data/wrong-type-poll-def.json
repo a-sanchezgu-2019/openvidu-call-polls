@@ -1,0 +1,14 @@
+{
+  "anonymous": true,
+  "question": "Test Poll",
+  "args": {
+    "options": [
+      {
+        "text": "Option A"
+      },
+      {
+        "text": "Option B"
+      }
+    ]
+  }
+}

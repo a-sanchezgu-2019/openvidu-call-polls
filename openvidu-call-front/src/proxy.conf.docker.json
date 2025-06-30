@@ -1,6 +1,6 @@
 {
 	"/": {
-	  "target": "http://openvidu-call-polls-back:5442",
+	  "target": "http://openvidu-call-polls-back:5000",
 	  "secure": false
 	}
 }

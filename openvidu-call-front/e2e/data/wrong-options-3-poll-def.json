@@ -1,0 +1,17 @@
+{
+  "anonymous": true,
+  "question": "Test Question",
+  "type": "multiple_option",
+  "args": {
+    "options": [
+      {
+        "text": "Option A"
+      },
+      {
+        "text": "Option B"
+      }
+    ],
+    "minOptions": 1,
+    "maxOptions": 3
+  }
+}

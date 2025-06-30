@@ -1,0 +1,21 @@
+{
+  "anonymous": true,
+  "question": "Test Question",
+  "type": "preference_order",
+  "args": {
+    "options": [
+      {
+        "text": "Option A"
+      },
+      {
+        "text": "Option B"
+      }
+    ],
+    "minOptions": 1,
+    "maxOptions": 2,
+    "pointsMapping": [
+      2,
+      1
+    ]
+  }
+}

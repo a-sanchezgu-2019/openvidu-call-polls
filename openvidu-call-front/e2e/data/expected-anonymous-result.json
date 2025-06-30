@@ -1,0 +1,22 @@
+{
+  "sessionId": "anonymousExportTest",
+  "type": "single_option",
+  "anonymous": true,
+  "question": "Test Question",
+  "participants": [],
+  "totalParticipants": 2,
+  "data": {
+    "options": [
+      {
+        "text": "Option A",
+        "result": 1,
+        "percentage": 50
+      },
+      {
+        "text": "Option B",
+        "result": 1,
+        "percentage": 50
+      }
+    ]
+  }
+}

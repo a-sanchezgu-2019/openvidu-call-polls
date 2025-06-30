@@ -47,8 +47,8 @@
     </ng-container>
 
     <div class="poll_action_buttons">
-      <button *ngIf="this.exportFilename == null || this.exportHref == null" class="poll_action_icon_btn" type="button" matTooltip="Validate Poll" (click)="validateCurrentDefinition()" mat-raised-button><mat-icon>done</mat-icon></button>
-      <a *ngIf="this.exportFilename != null && this.exportHref != null" [href]="this.exportHref" [download]="this.exportFilename" type="button" class="poll_action_icon_btn" matTooltip="Export Definition" mat-raised-button><mat-icon>get_app</mat-icon></a>
+      <button *ngIf="this.exportFilename == null || this.exportHref == null" id="validate-poll-def-btn" class="poll_action_icon_btn" type="button" matTooltip="Validate Poll" (click)="validateCurrentDefinition()" mat-raised-button><mat-icon>done</mat-icon></button>
+      <a *ngIf="this.exportFilename != null && this.exportHref != null" id="export-poll-def-btn" [href]="this.exportHref" [download]="this.exportFilename" type="button" class="poll_action_icon_btn" matTooltip="Export Definition" mat-raised-button><mat-icon>get_app</mat-icon></a>
       <button id="import-poll-def-btn" class="poll_action_icon_btn" type="button" matTooltip="Import Poll" (click)="importInput.click();" mat-raised-button><mat-icon>publish</mat-icon></button>
       <button id="submit-poll-def-btn" class="poll_action_icon_btn" type="submit" matTooltip="Create Poll" mat-raised-button><mat-icon>forward</mat-icon></button>
     </div>

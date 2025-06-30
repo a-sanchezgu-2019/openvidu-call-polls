@@ -1,6 +1,6 @@
 import { Session } from 'openvidu-browser';
 import { Component, Input } from '@angular/core';
-import { LotteryPoll, MultipleOptionPoll, Poll, PollDefinition, PreferenceOrderPoll, SingleOptionPoll, generatePoll } from 'src/app/models/poll.model';
+import { LotteryPoll, MultipleOptionPoll, Poll, PollDefinition, PreferenceOrderPoll, SingleOptionPoll, generatePoll, generatePollDTO } from 'src/app/models/poll.model';
 import { environment } from 'src/environments/environment';
 import { PollSyncService } from 'src/app/services/poll-sync.service';
 
@@ -55,7 +55,7 @@ export class PollCreationComponent {
 
       let callback = (poll: Poll) => {
         this.session.signal({
-          data: JSON.stringify(poll),
+          data: JSON.stringify(generatePollDTO(poll)),
           to: undefined,
           type: "pollCreated"
         });
@@ -101,7 +101,11 @@ export class PollCreationComponent {
     file.text().then( text => {
       try {
         let object = JSON.parse(text);
+        if(!("type" in object))
+          this.creationError = "Error importing: Missing type";
         try {
+          if(!("args" in object))
+            object.args = {};
           let definition: PollDefinition = object as PollDefinition;
           let validationResult = this.validatePollDefinition(definition);
           if(validationResult == "") {

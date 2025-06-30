@@ -53,7 +53,7 @@
 
       <div class="question container">{{this.poll.question}}</div>
       <ng-container *ngIf="this.isPollWithOptions()">
-        <div class="response moderator-response" *ngFor="let option of this.poll.options; let optIndex = index">
+        <div class="response moderator-response" *ngFor="let option of this.poll.options; let optIndex = index" [id]="'option-'+optIndex">
           <div class="response-progress" [style.width.%]="this.calculateOptionPercentaje(optIndex)" [style]="this.calculateOptionPercentaje(optIndex) >= .95? 'border-top-right-radius: 10px; border-bottom-right-radius: 10px;': ''"></div>
           <div class="response-data moderator-response"><div class="response-text">{{option.text}}</div><div class="response-percentage">{{this.calculateOptionPercentaje(optIndex) | number : '1.0-2'}}% ({{option.result}})</div></div>
         </div>

@@ -16,7 +16,7 @@ export interface PollResult {
 export abstract class Poll {
 
   static validateDefinition(definition: PollDefinition): string {
-    if(definition.question == "")
+    if((definition.question?? "") == "")
       return "Please, enter a question|question";
     return "";
   }
@@ -93,8 +93,8 @@ export interface PollDTO {
 export interface PollOption {
 
   text: string;
-  result: number;
   participants: Array<string>;
+  result: number;
 
 }
 
@@ -214,7 +214,8 @@ export class SingleOptionPoll extends PollWithOptions {
   override respond(response: PollResponse): boolean {
     if(!this.validResponse(response))
       return false;
-    super.respond(response);
+    if(!super.respond(response))
+      return false;
     let optionIndex = response.args.optionIndex as number;
     this.options[optionIndex].participants.push(response.nickname);
     this.options[optionIndex].result++;
@@ -237,12 +238,20 @@ export class MultipleOptionPoll extends PollWithOptions {
     let result = super.validateDefinition(definition);
     if(result != "")
       return result;
-    if("minOptions" in definition.args)
+    if("minOptions" in definition.args) {
       if(typeof definition.args.minOptions != "number" || definition.args.minOptions < 1)
         return "Minimum options must be a number greater than 0|minOptions";
-    if("maxOptions" in definition.args)
+    } else {
+      return "Missing minimum options|minOptions";
+    }
+    if("maxOptions" in definition.args) {
       if(typeof definition.args.maxOptions != "number" || definition.args.maxOptions > (definition.args.options as string[]).length)
         return "Maximum options must be a number smaller or equal to the number of options|maxOptions";
+    } else {
+      return "Missing maximum options|maxOptions";
+    }
+    if(definition.args.minOptions > definition.args.maxOptions)
+      return "Maximum options must be greater or equal to the minimum options|maxOptions";
     return "";
   }
 
@@ -297,7 +306,8 @@ export class MultipleOptionPoll extends PollWithOptions {
   override respond(response: PollResponse): boolean {
     if(!this.validResponse(response))
       return false;
-    super.respond(response);
+    if(!super.respond(response))
+      return false;
     for(let optionIndex of (response.args.options as string).split(",").map(Number)) {
       this.options[optionIndex].participants.push(response.nickname);
       this.options[optionIndex].result++;
@@ -325,13 +335,15 @@ export class PreferenceOrderPoll extends PollWithOptions {
     if("minOptions" in definition.args) {
       if(typeof definition.args.minOptions != "number" || definition.args.minOptions < 1)
         return "Minimum options must be a number greater than 0|minOptions";
+    } else {
+      return "Missing minimum options|minOptions";
     }
     if("maxOptions" in definition.args) {
       if(typeof definition.args.maxOptions != "number" || definition.args.maxOptions > nOpts)
         return "Maximum options must be a number smaller or equal to the number of options|maxOptions";
       maxOptions = definition.args.maxOptions;
     } else {
-      maxOptions = nOpts;
+      return "Missing maximum options|maxOptions";
     }
     if("pointsMapping" in definition.args) {
       if(typeof definition.args.pointsMapping != "object" || !(definition.args.pointsMapping instanceof Array))
@@ -341,6 +353,8 @@ export class PreferenceOrderPoll extends PollWithOptions {
       for(let points of definition.args.pointsMapping)
         if(typeof points != "number")
           return "Points invalid type|pointsMapping";
+    } else {
+      definition.args.pointsMapping = Array.from(Array(definition.args.maxOptions).keys()).reverse().map(value => value + 1)
     }
     return "";
   }
@@ -408,7 +422,8 @@ export class PreferenceOrderPoll extends PollWithOptions {
   override respond(response: PollResponse): boolean {
     if(!this.validResponse(response))
       return false;
-    super.respond(response);
+    if(!super.respond(response))
+      return false;
     let responseOptions = (response.args.options as string).split(",").map(Number);
     this.preferenceOrders.set(response.nickname, responseOptions);
     for(let [index, option] of Object.entries(responseOptions)) {

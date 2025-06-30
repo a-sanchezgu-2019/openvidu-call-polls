@@ -1,0 +1,14 @@
+{
+  "anonymous": true,
+  "type": "single_option",
+  "args": {
+    "options": [
+      {
+        "text": "Option A"
+      },
+      {
+        "text": "Option B"
+      }
+    ]
+  }
+}

@@ -122,7 +122,7 @@ test.describe("Testing POLL CREATION features", () => {
 
 	});
 
-	test("MODERATOR should be able to remove an option to a POLL DEFINITION when there were more than 2", async () => {
+	test("MODERATOR should be able to remove an option to a POLL DEFINITION when there are more than 2", async () => {
 
 		await sessionData.page.goto(`/#/${sessionData.randomSessionId}`);
 
@@ -303,6 +303,68 @@ test.describe("Testing POLL INTERACTION features", () => {
 		expect(await sessionData.utils.isPresent("#create-poll-def-btn")).toBeTruthy();
 
     await closeTestSessionData(partSession);
+
+	});
+
+	test("POLL option percentages should match with the responses", async ({browser}) => {
+
+		await sessionData.page.goto(`/#/${sessionData.randomSessionId}`);
+
+		await sessionData.utils.clickOn("#join-button");
+
+		await sessionData.utils.checkActionButtonsArePresent();
+		await sessionData.utils.clickOn("#poll-panel-btn");
+
+		await createBasicPoll(sessionData);
+
+		await sessionData.utils.waitFor("#poll-close-btn");
+
+    let partSession = await createTestSessionData(browser);
+		await doLogin(partSession);
+
+		await partSession.page.goto(`/#/${sessionData.randomSessionId}`);
+
+		await partSession.utils.clickOn("#join-button");
+
+		await partSession.utils.checkActionButtonsArePresent();
+		await partSession.utils.clickOn("#poll-panel-btn");
+		await partSession.utils.waitFor("#poll-panel");
+
+		await partSession.utils.waitFor("#option-1");
+		await partSession.utils.clickOn("#option-1");
+		await partSession.utils.waitFor("#option-1.responded");
+
+		if(await partSession.utils.isPresent("#submit-poll-response-btn", {}, false)) {
+			await partSession.utils.clickOn("#submit-poll-response-btn", {}, {force: true})
+		}
+
+		await expect(sessionData.page.locator("#option-1 div.response-percentage")).toHaveText("100% (1)");
+		await expect(sessionData.page.locator("div.total-responses")).toHaveText("100% (1 of 1) participants responded");
+
+    let partSession2 = await createTestSessionData(browser);
+		await doLogin(partSession2);
+
+		await partSession2.page.goto(`/#/${sessionData.randomSessionId}`);
+
+		await partSession2.utils.clickOn("#join-button");
+
+		await partSession2.utils.checkActionButtonsArePresent();
+		await partSession2.utils.clickOn("#poll-panel-btn");
+		await partSession2.utils.waitFor("#poll-panel");
+
+		await expect(sessionData.page.locator("div.total-responses")).toHaveText("50% (1 of 2) participants responded");
+
+		await partSession2.utils.waitFor("#option-0");
+		await partSession2.utils.clickOn("#option-0");
+		await partSession2.utils.waitFor("#option-0.responded");
+
+		if(await partSession2.utils.isPresent("#submit-poll-response-btn", {}, false)) {
+			await partSession2.utils.clickOn("#submit-poll-response-btn", {}, {force: true})
+		}
+
+		await expect(sessionData.page.locator("#option-0 div.response-percentage")).toHaveText("50% (1)");
+		await expect(sessionData.page.locator("#option-1 div.response-percentage")).toHaveText("50% (1)");
+		await expect(sessionData.page.locator("div.total-responses")).toHaveText("100% (2 of 2) participants responded");
 
 	});
 

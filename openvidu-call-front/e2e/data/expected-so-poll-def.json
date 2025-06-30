@@ -1,0 +1,15 @@
+{
+  "anonymous": false,
+  "question": "Test Question",
+  "type": "single_option",
+  "args": {
+    "options": [
+      {
+        "text": "Option A"
+      },
+      {
+        "text": "Option B"
+      }
+    ]
+  }
+}
