@@ -25,11 +25,8 @@ RUN mvn package
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /usr/share/openvidu-call-polls
-ENV SERVER_PORT=${SERVER_PORT:-5000}
-ENV OPENVIDU_URL=${OPENVIDU_URL:-http://openvidu:4443}
-ENV OPENVIDU_SECRET=${OPENVIDU_SECRET:-MY_SECRET}
 COPY --from=back_build /usr/share/openvidu-call-polls-back/target/openvidu-call-back-java.jar /usr/share/openvidu-call-polls/openvidu-call-polls.jar
 
-EXPOSE ${SERVER_PORT:-5000}
+EXPOSE 5000
 
 CMD ["java", "-jar", "openvidu-call-polls.jar"]
