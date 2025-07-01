@@ -61,7 +61,7 @@ export class PollPanelComponent implements OnInit {
   constructor(private pollService: PollSyncService, private participantService: ParticipantService) { }
 
   ngOnInit(): void {
-    if(this.pollSync)
+    if(this.pollSync) {
       this.fetchPoll();
     } else if(this.session.connection.role !== "MODERATOR" && this._poll === undefined) {
       // Retrieve poll from moderator
