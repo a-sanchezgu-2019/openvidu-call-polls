@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class SPAController {
 
-    @GetMapping({"/**/{path:[^\\.]*}", "/{path:[^\\.]*}"}) 
-    public String getMethodName(@RequestParam String param) {
-        return "forward:/index.html/" + param;
+    @GetMapping({"/**/{path:[^\\.]*}"}) 
+    public String getMethodName(@RequestParam(defaultValue = "") String path) {
+        return "forward:/";
     }
     
 
