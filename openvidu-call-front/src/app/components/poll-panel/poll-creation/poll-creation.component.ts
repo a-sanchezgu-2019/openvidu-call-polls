@@ -62,7 +62,7 @@ export class PollCreationComponent {
         this.pollDefinition = null;
       };
 
-      if(environment.poll_sync) {
+      if(this.pollService.isBackendSyncEnabled()) {
         this.pollService.createPoll(this.pollDefinition).subscribe({
           next: poll => callback(poll),
           error: error => this.creationError = "An unexpected error ocurred: " + error

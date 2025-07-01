@@ -9,9 +9,23 @@ import { Observable, catchError, map, throwError, of } from 'rxjs';
 export class PollSyncService {
 
   private baseHref: string;
+  private backendSynchronization: boolean = true;
 
   constructor(private http: HttpClient) {
-    this.baseHref = '/' + (!!window.location.pathname.split('/')[1] ? window.location.pathname.split('/')[1] + '/polls' : 'polls');
+    this.baseHref = '/' + (!!window.location.pathname.split('/')[1] ? window.location.pathname.split('/')[1] + "/polls": "polls");
+    this.http.get(this.baseHref + "/pollSync/config").pipe(
+      map(response => response as {pollSyncEnabled: boolean}),
+      catchError(error => this.handleError(error))
+    ).subscribe({
+      next: config => {
+        this.backendSynchronization = config.pollSyncEnabled;
+      },
+      error: _ => console.log("Couldn't fetch pollSynchronization configuration")
+    });
+  }
+
+  isBackendSyncEnabled(): boolean {
+    return this.backendSynchronization;
   }
 
   createPoll(definition: PollDefinition): Observable<Poll> {

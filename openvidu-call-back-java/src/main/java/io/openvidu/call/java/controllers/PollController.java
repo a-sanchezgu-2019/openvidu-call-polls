@@ -1,8 +1,12 @@
 package io.openvidu.call.java.controllers;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.management.InvalidAttributeValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,6 +43,9 @@ public class PollController {
 
     @Value("${OPENVIDU_URL}")
     private String OPENVIDU_URL;
+
+	@Value("${OPENVIDU_CALL_POLLS_SYNC}")
+	private String POLL_SYNC;
 
     /**
      * Service which provides functionality to manage the videoconference parameters
@@ -228,5 +235,15 @@ public class PollController {
         return ResponseEntity.status(403).body("Permissions denied to delete polls");
 
     }
+
+	@GetMapping("/pollSync/config")
+	public ResponseEntity<?> getconfig() {
+		Map<String, Object> response = new HashMap<String, Object>();
+
+		response.put("pollSyncEnabled", POLL_SYNC.equals("ENABLED"));
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+
+	}
     
 }

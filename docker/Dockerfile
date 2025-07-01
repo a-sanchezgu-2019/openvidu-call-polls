@@ -1,6 +1,3 @@
-# Global Arguments
-ARG POLLS_SYNC_MODE
-
 # Build Frontend
 FROM node:18-alpine AS front_build
 
@@ -12,7 +9,6 @@ COPY openvidu-call-front/package*.json /usr/share/openvidu-call-polls-front/
 COPY openvidu-call-front/tsconfig.json /usr/share/openvidu-call-polls-front/tsconfig.json
 RUN npm install
 COPY openvidu-call-front/src /usr/share/openvidu-call-polls-front/src
-COPY openvidu-call-front/src/environments/environment.docker.${POLLS_SYNC_MODE:-sync}.ts /usr/share/openvidu-call-polls-front/src/environments/environment.docker.ts
 RUN ng build --configuration=docker
 
 # Build Backend
