@@ -122,7 +122,7 @@ test.describe("Testing POLL CREATION features", () => {
 
 	});
 
-	test("MODERATOR should be able to remove an option to a POLL DEFINITION when there are more than 2", async () => {
+	test("MODERATOR should be able to remove an option from a POLL DEFINITION when there are more than 2", async () => {
 
 		await sessionData.page.goto(`/#/${sessionData.randomSessionId}`);
 
