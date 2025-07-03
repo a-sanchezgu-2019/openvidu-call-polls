@@ -158,13 +158,12 @@ export class CallComponent implements OnInit {
 
 	private session!: Session;
 	private poll?: Poll;
-	private pollSync: boolean = environment.poll_sync;
 	showPollPanel: boolean = false;
 
 	onSessionCreated(session: Session) {
 		// Session management
 		this.session = session;
-		if(this.pollSync) {
+		if(this.pollService.isBackendSyncEnabled()) {
 			// Retrieve poll from backend
 			this.pollService.getPoll(this.sessionId, true).subscribe({
 				next: poll => this.poll = poll
@@ -201,7 +200,7 @@ export class CallComponent implements OnInit {
 	}
 
 	onPollCreated(event: SignalEvent) {
-		if(this.pollSync) {
+		if(this.pollService.isBackendSyncEnabled()) {
 			this.fetchPoll();
 		} else {
 			this.poll = parsePollDTO(JSON.parse(event.data) as PollDTO);
@@ -210,7 +209,7 @@ export class CallComponent implements OnInit {
 
 	onPollResponse(event: SignalEvent) {
 		if(this.poll && this.session.connection.role == 'MODERATOR') {
-			if(this.pollSync) {
+			if(this.pollService.isBackendSyncEnabled()) {
 				this.fetchPoll();
 			} else if(event.from !== undefined) {
 				const response: PollResponse = JSON.parse(event.data) as PollResponse;
@@ -221,7 +220,7 @@ export class CallComponent implements OnInit {
 	}
 
 	onPollClosed(event: SignalEvent) {
-		if(this.pollSync) {
+		if(this.pollService.isBackendSyncEnabled()) {
 			this.fetchPoll();
 		} else {
 			this.poll = parsePollDTO(JSON.parse(event.data) as PollDTO);

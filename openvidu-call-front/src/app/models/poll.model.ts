@@ -452,7 +452,7 @@ function mapOptionsFromText(optionsText: {text: string}[]): PollOption[] {
   return optionsText.map(pollOptionFromText);
 }
 
-// We only rely on this function if the poll information is not synchronized with the backend (environment.poll_sync = false)
+// We only rely on this function if the poll information is not synchronized with the backend
 export function generatePoll(sessionId: string, definition: PollDefinition, initialStatus: string = 'pending'): Poll {
   let options = "options" in definition.args? (definition.args.options as {text: string}[]).map(pollOptionFromText): undefined;
   switch(definition.type) {

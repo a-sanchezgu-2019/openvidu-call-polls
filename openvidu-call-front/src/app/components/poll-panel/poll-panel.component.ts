@@ -23,7 +23,7 @@ export class PollPanelComponent implements OnInit {
   }
   set poll(poll: Poll) {
     if(poll != null) {
-      if(!this.pollSync && this.session.connection.role != 'MODERATOR') {
+      if(!this.pollService.isBackendSyncEnabled() && this.session.connection.role != 'MODERATOR') {
         let nickname = this.participantService.getLocalParticipant().getNickname();
         if(poll.participants?.includes(nickname)) {
           if(poll instanceof LotteryPoll) {
@@ -49,8 +49,6 @@ export class PollPanelComponent implements OnInit {
   }
   private _poll?: Poll;
 
-  private pollSync: boolean = environment.poll_sync;
-
   responseIndices: number[] = [];
 
   exportResultsFilename: string = null;
@@ -61,7 +59,7 @@ export class PollPanelComponent implements OnInit {
   constructor(private pollService: PollSyncService, private participantService: ParticipantService) { }
 
   ngOnInit(): void {
-    if(this.pollSync) {
+    if(this.pollService.isBackendSyncEnabled()){
       this.fetchPoll();
     } else if(this.session.connection.role !== "MODERATOR" && this._poll === undefined) {
       // Retrieve poll from moderator
@@ -92,7 +90,7 @@ export class PollPanelComponent implements OnInit {
     this.generalError = this.poll.validateResponse(pollResponse);
     if(this.generalError != "")
       return;
-    if(this.pollSync) {
+    if(this.pollService.isBackendSyncEnabled()) {
       this.pollService.respondPoll(this.poll.sessionId, pollResponse).subscribe({
         next: poll => {
           let to: Connection[] | undefined;
@@ -148,7 +146,7 @@ export class PollPanelComponent implements OnInit {
     if(!this.poll)
       return;
     this.generalError = "";
-    if(this.pollSync) {
+    if(this.pollService.isBackendSyncEnabled()) {
       this.pollService.closePoll(this.poll.sessionId).subscribe({
         next: poll => {
           this.session.signal({
@@ -171,7 +169,7 @@ export class PollPanelComponent implements OnInit {
 
   deletePoll() {
     this.generalError = "";
-    if(this.pollSync) {
+    if(this.pollService.isBackendSyncEnabled()) {
       this.pollService.deletePoll(this.session.sessionId).subscribe({
         complete: () => {
           this.session.signal({
@@ -248,7 +246,7 @@ export class PollPanelComponent implements OnInit {
 
   loadExportCurrentResults() {
     this.generalError = "";
-    if(this.pollSync) {
+    if(this.pollService.isBackendSyncEnabled()) {
       this.pollService.getPollResults(this.session.sessionId).subscribe({
         next: pollResult => this.setPollResultExportData(this.session.sessionId+".poll.result.json", pollResult),
         error: error => this.generalError = error
