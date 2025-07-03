@@ -5,7 +5,7 @@ Depends on [OpenVidu](https://openvidu.io) technologies. Learn more about it [he
 
 You can clone this repository by running the following command:
 ```sh
-git clone https://github.com/a-sanchezgu-2019/openvidu-call-polls
+git clone https://github.com/a-sanchezgu-2019/openvidu-call-polls.git
 ```
 
 After this, you can move to the root directory of the project with:
